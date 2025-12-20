@@ -1,6 +1,6 @@
 const Quotes = () => {
   return (
-    <section className="screen bg-dots" id="screen-6">
+    <section className="screen" id="screen-6">
       <div className="center-block center-block--narrow">
         <p className="quote">
           From pilgrimage tourism to business development,

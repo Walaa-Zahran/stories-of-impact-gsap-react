@@ -42,22 +42,33 @@ body {
 }
 .page {
   position: relative;
+  min-height: 100vh;
 }
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url(/assets/images/bg.svg) no-repeat;
+  background-position: center center;
+  background-size: 100% 82%;
+}
+
 img {
   max-width: 100%;
   display: block;
 }
 
 .screen {
-  position: fixed; /* all sections sit on top of each other */
-  inset: 0; /* top:0 right:0 bottom:0 left:0 */
-  width: 100%;
+  position: fixed;
+  inset: 0;
   height: 100vh;
-  opacity: 0; /* start hidden, GSAP will show */
-  pointer-events: none; /* so upper invisible layers don’t block scroll/click */
+  z-index: 1;
+  background: transparent;
 }
 .screen.is-active {
-  pointer-events: auto; /* only active layer can be interactive if needed */
+  pointer-events: auto;
 }
 .scroll-spacer {
   height: var(--scrollH, 700vh);
@@ -249,11 +260,30 @@ img {
    Impact floating layout (Screen 4)
 ------------------------------ */
 .impact {
-  width: min(1240px, 96vw);
-  min-height: 86vh;
+  width: 100vw;
+  height: 100vh;
   position: relative;
-  display: grid;
-  place-items: center;
+}
+
+.impact__img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  width: 175px;
+  height: 233px;
+
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: var(--shadow-card);
+
+  transform: translate(-50%, -50%);
+}
+.impact__stage {
+  position: relative;
+  width: var(--container);
+  height: 100vh;
+  margin: 0 auto;
 }
 
 .impact__center {
@@ -261,65 +291,55 @@ img {
   max-width: 900px;
 }
 
-.impact__img {
-  position: absolute;
-  width: clamp(120px, 16vw, 190px);
-  aspect-ratio: 1 / 1.15;
-  object-fit: cover;
-  border-radius: 10px;
-  box-shadow: var(--shadow-card);
-}
+.story-card__img {
+  width: 175px !important;
+  height: 233px !important;
 
-/* placement approximations from screenshot */
+  object-fit: cover;
+  object-position: center;
+
+  border-radius: 6px;
+  overflow: hidden;
+  display: block;
+}
 .impact__img--tl {
-  left: 6%;
-  top: 10%;
-  width: clamp(120px, 14vw, 170px);
+  transform: translate(-50%, -50%) translate(-481px, -229.5px);
 }
 .impact__img--ml {
-  left: 4%;
-  top: 40%;
-  width: clamp(130px, 15vw, 185px);
+  transform: translate(-50%, -50%) translate(-537px, 34.5px);
 }
 .impact__img--bl {
-  left: 10%;
-  bottom: 14%;
-  width: clamp(140px, 17vw, 210px);
+  transform: translate(-50%, -50%) translate(-442px, 292.5px);
 }
 
 .impact__img--tr {
-  right: 10%;
-  top: 10%;
-  width: clamp(130px, 15vw, 200px);
+  transform: translate(-50%, -50%) translate(-235px, 435.5px);
 }
 .impact__img--mr {
-  right: 6%;
-  top: 40%;
-  width: clamp(130px, 15vw, 200px);
+  transform: translate(-50%, -50%) translate(-13px, 492.5px);
 }
 .impact__img--br {
-  right: 10%;
-  bottom: 16%;
-  width: clamp(140px, 17vw, 220px);
+  transform: translate(-50%, -50%) translate(241px, 443.5px);
 }
 
 .impact__img--bc {
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 8%;
-  width: clamp(120px, 14vw, 170px);
+  transform: translate(-50%, -50%) translate(451px, 291.5px);
 }
 .impact__img--bm1 {
-  left: 38%;
-  bottom: 6%;
-  width: clamp(120px, 13vw, 165px);
-  opacity: 0.98;
+  transform: translate(-50%, -50%) translate(536px, 29.5px);
 }
 .impact__img--bm2 {
-  left: 62%;
-  bottom: 6%;
-  width: clamp(120px, 13vw, 165px);
-  opacity: 0.98;
+  transform: translate(-50%, -50%) translate(492px, -234.5px);
+}
+
+.impact__img--bm3 {
+  transform: translate(-50%, -50%) translate(294px, -362.5px);
+}
+.impact__img--bm4 {
+  transform: translate(-50%, -50%) translate(4px, -521.5px);
+}
+.impact__img--bm5 {
+  transform: translate(-50%, -50%) translate(-285px, -450.5px);
 }
 
 /* -----------------------------
@@ -455,7 +475,6 @@ img {
     display: none;
   }
 
-  /* Impact floating -> grid */
   .impact {
     min-height: auto;
     padding: 40px 0 80px;
@@ -463,9 +482,13 @@ img {
 
   .impact__img {
     position: static;
+    left: auto;
+    top: auto;
+    transform: none;
     width: 100%;
     max-width: 220px;
-    border-radius: 12px;
+    height: auto;
+    margin: 0 auto;
   }
 
   .impact {
@@ -477,13 +500,11 @@ img {
   .impact__center {
     order: 0;
   }
-  /* put images in a responsive row grid */
   .impact::after {
     content: "";
     display: block;
   }
 
-  /* quick grid for images: wrap automatically */
   .impact__img {
     margin: 0 auto;
   }

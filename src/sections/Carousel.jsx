@@ -1,6 +1,6 @@
 const Carousel = () => {
   return (
-    <section className="screen bg-dots" id="screen-2">
+    <section className="screen" id="screen-2">
       <div className="carousel">
         <div className="carousel__track">
           <article className="story-card story-card--primary">

@@ -1,6 +1,6 @@
 const Title = () => {
   return (
-    <section className="screen bg-dots" id="screen-3">
+    <section className="screen" id="screen-3">
       <div className="center-block">
         <h2 className="title">
           <span className="title--thin">STORIES OF</span>

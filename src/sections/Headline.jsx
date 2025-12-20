@@ -1,6 +1,6 @@
 const Headline = () => {
   return (
-    <section className="screen bg-dots" id="screen-1">
+    <section className="screen" id="screen-1">
       <div className="center-block">
         <h1 className="title">
           <span className="title--thin">THEIR STORIES. OUR</span>
