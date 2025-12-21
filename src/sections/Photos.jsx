@@ -1,192 +1,233 @@
-import { useLayoutEffect, useRef } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import gsap from "gsap";
-
-const Photos = ({ onIntroDone }) => {
+const Photos = forwardRef(({ onIntroDone }, ref) => {
+  const bounceTweenRef = useRef(null);
+  const stopBounceCleanupRef = useRef(null);
   const sectionRef = useRef(null);
+  const introTweenRef = useRef(null);
+  const stopBounce = () => {
+    // kill tween
+    bounceTweenRef.current?.kill();
+    bounceTweenRef.current = null;
 
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      const section = sectionRef.current;
-      if (!section) return;
+    // remove listeners if any
+    stopBounceCleanupRef.current?.();
+    stopBounceCleanupRef.current = null;
+  };
 
-      const images = Array.from(section.querySelectorAll(".impact__img"));
-      if (!images.length) return;
+  const startBounceUntilScroll = () => {
+    const section = sectionRef.current;
+    if (!section) return;
 
-      const hero = section.querySelector(".impact__img--mr") || images[0];
-      const heroIndex = images.indexOf(hero);
+    const hintIcon = section.querySelector(".scroll-hint__icon img");
+    if (!hintIcon) return;
 
-      // READ FINAL FROM --fx/--fy
-      const final = images.map((el) => {
-        const cs = getComputedStyle(el);
-        return {
-          fx: parseFloat(cs.getPropertyValue("--fx")) || 0,
-          fy: parseFloat(cs.getPropertyValue("--fy")) || 0,
-        };
-      });
+    // ensure no duplicates
+    stopBounce();
 
-      const setOpacity = images.map((el) => gsap.quickSetter(el, "opacity"));
-      const setScale = images.map((el) => gsap.quickSetter(el, "scale"));
-      const setDX = images.map(
-        (el) => (v) => el.style.setProperty("--dx", `${v}px`)
-      );
-      const setDY = images.map(
-        (el) => (v) => el.style.setProperty("--dy", `${v}px`)
-      );
+    // start bounce
+    bounceTweenRef.current = gsap.to(hintIcon, {
+      y: 10,
+      duration: 0.6,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+    });
 
-      const center = section.querySelector(".impact__center");
-      const setCenterAlpha = center
-        ? gsap.quickSetter(center, "autoAlpha")
-        : null;
-      const setCenterY = center ? gsap.quickSetter(center, "y") : null;
+    let stopped = false;
 
-      const apply = (p) => {
-        const HOLD = 0.12;
+    const kill = () => {
+      if (stopped) return;
+      stopped = true;
 
-        if (p <= HOLD) {
-          if (setCenterAlpha) setCenterAlpha(0);
-          if (setCenterY) setCenterY(8);
+      stopBounce();
 
-          section.classList.remove("show-final-text");
-          section.classList.remove("images-hidden");
+      // snap back nicely
+      gsap.to(hintIcon, { y: 0, duration: 0.2, ease: "power2.out" });
+    };
 
-          images.forEach((_, i) => {
-            setScale[i](0.98);
-            setOpacity[i](i === heroIndex ? 1 : 0);
+    const onWheel = () => kill();
+    const onTouchMove = () => kill();
+    const onKeyDown = (e) => {
+      const keys = [
+        "ArrowDown",
+        "ArrowUp",
+        "PageDown",
+        "PageUp",
+        "Home",
+        "End",
+        " ",
+      ];
+      if (keys.includes(e.key)) kill();
+    };
 
-            // reset back to center
-            setDX;
-            setDY;
-          });
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("keydown", onKeyDown);
 
-          return;
-        }
+    // store cleanup
+    stopBounceCleanupRef.current = () => {
+      window.removeEventListener("wheel", onWheel, { passive: true });
+      window.removeEventListener("touchmove", onTouchMove, { passive: true });
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  };
 
-        const pp = (p - HOLD) / (1 - HOLD);
-        const MID = 0.55;
-        const t = pp <= MID ? pp / MID : (1 - pp) / (1 - MID); // 1 spread, 0 merged
+  useImperativeHandle(ref, () => ({
+    playIntro: () => {
+      runIntro(); // replay any time
+    },
+  }));
 
-        images.forEach((_, i) => {
-          setDX[i](final[i].fx * t);
-          setDY[i](final[i].fy * t);
+  const runIntro = () => {
+    const section = sectionRef.current;
+    if (!section) return;
 
-          const pop = 0.85 + 0.15 * t;
-          setScale[i](i === heroIndex ? Math.max(1, pop) : pop);
-        });
+    const images = Array.from(section.querySelectorAll(".impact__img"));
+    if (!images.length) return;
 
-        // step-by-step text fade when merged near end
-        const TEXT_START = 0.78;
-        const TEXT_END = 0.98;
-        const STEPS = 10;
+    const hero = section.querySelector(".impact__img--mr") || images[0];
+    const heroIndex = images.indexOf(hero);
 
-        const raw = gsap.utils.clamp(
-          0,
-          1,
-          (pp - TEXT_START) / (TEXT_END - TEXT_START)
-        );
-        const alpha = Math.round(raw * STEPS) / STEPS;
-
-        if (setCenterAlpha) setCenterAlpha(alpha);
-        if (setCenterY) setCenterY(8 * (1 - alpha));
-
-        section.classList.toggle("show-final-text", alpha > 0.98);
-
-        // fade images out AFTER text begins
-        const IMG_FADE_START = 0.2;
-        const imgFade = gsap.utils.clamp(
-          0,
-          1,
-          (alpha - IMG_FADE_START) / (1 - IMG_FADE_START)
-        );
-
-        images.forEach((_, i) => {
-          const base = i === heroIndex ? 1 : Math.min(1, t * 1.2);
-          const finalOpacity = base * (1 - imgFade);
-          setOpacity[i](finalOpacity);
-        });
-
-        section.classList.toggle("images-hidden", imgFade >= 1);
+    const final = images.map((el) => {
+      const cs = getComputedStyle(el);
+      return {
+        fx: parseFloat(cs.getPropertyValue("--fx")) || 0,
+        fy: parseFloat(cs.getPropertyValue("--fy")) || 0,
       };
+    });
 
-      // Start state
-      apply(0);
-      // ---- bounce scroll hint icon until user scrolls ----
-      const hintIcon = section.querySelector(".scroll-hint__icon img");
+    const setOpacity = images.map((el) => gsap.quickSetter(el, "opacity"));
+    const setScale = images.map((el) => gsap.quickSetter(el, "scale"));
+    const setDX = images.map(
+      (el) => (v) => el.style.setProperty("--dx", `${v}px`)
+    );
+    const setDY = images.map(
+      (el) => (v) => el.style.setProperty("--dy", `${v}px`)
+    );
 
-      let bounceTween = null;
+    const center = section.querySelector(".impact__center");
+    const setCenterAlpha = center
+      ? gsap.quickSetter(center, "autoAlpha")
+      : null;
+    const setCenterY = center ? gsap.quickSetter(center, "y") : null;
 
-      if (hintIcon) {
-        // start bouncing (yoyo)
-        bounceTween = gsap.to(hintIcon, {
-          y: 10,
-          duration: 0.6,
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: -1,
+    const apply = (p) => {
+      const HOLD = 0.12;
+
+      if (p <= HOLD) {
+        if (setCenterAlpha) setCenterAlpha(0);
+        if (setCenterY) setCenterY(8);
+
+        section.classList.remove("show-final-text");
+        section.classList.remove("images-hidden");
+
+        images.forEach((_, i) => {
+          setScale[i](0.98);
+          setOpacity[i](i === heroIndex ? 1 : 0);
+
+          setDX;
+          setDY;
         });
+
+        return;
       }
 
-      // stop bouncing on first real scroll (wheel / touch / key)
-      let stopped = false;
+      const pp = (p - HOLD) / (1 - HOLD);
+      const MID = 0.55;
+      const t = pp <= MID ? pp / MID : (1 - pp) / (1 - MID);
 
-      const stopBounce = () => {
-        if (stopped) return;
-        stopped = true;
+      images.forEach((_, i) => {
+        setDX[i](final[i].fx * t);
+        setDY[i](final[i].fy * t);
 
-        if (bounceTween) {
-          bounceTween.kill();
-          bounceTween = null;
-        }
-
-        // snap back nicely
-        if (hintIcon)
-          gsap.to(hintIcon, { y: 0, duration: 0.2, ease: "power2.out" });
-
-        // remove listeners
-        window.removeEventListener("wheel", onWheel, { passive: true });
-        window.removeEventListener("touchmove", onTouchMove, { passive: true });
-        window.removeEventListener("keydown", onKeyDown);
-      };
-
-      const onWheel = () => stopBounce();
-      const onTouchMove = () => stopBounce();
-      const onKeyDown = (e) => {
-        // keys that usually scroll
-        const keys = [
-          "ArrowDown",
-          "ArrowUp",
-          "PageDown",
-          "PageUp",
-          "Home",
-          "End",
-          " ",
-        ];
-        if (keys.includes(e.key)) stopBounce();
-      };
-
-      window.addEventListener("wheel", onWheel, { passive: true });
-      window.addEventListener("touchmove", onTouchMove, { passive: true });
-      window.addEventListener("keydown", onKeyDown);
-
-      // Drive p: 0 → 1 WITHOUT scroll
-      const driver = { p: 0 };
-
-      gsap.to(driver, {
-        p: 1,
-        duration: 3.6,
-        ease: "sine.inOut",
-        onUpdate: () => apply(driver.p),
-        onComplete: () => {
-          // ensure final state fully applied
-          apply(1);
-
-          // Intro finished, now allow scroll + init ScrollTriggers outside
-          onIntroDone?.();
-        },
+        const pop = 0.85 + 0.15 * t;
+        setScale[i](i === heroIndex ? Math.max(1, pop) : pop);
       });
-    }, sectionRef);
 
-    return () => ctx.revert();
-  }, [onIntroDone]);
+      const TEXT_START = 0.78;
+      const TEXT_END = 0.98;
+      const STEPS = 10;
+
+      const raw = gsap.utils.clamp(
+        0,
+        1,
+        (pp - TEXT_START) / (TEXT_END - TEXT_START)
+      );
+      const alpha = Math.round(raw * STEPS) / STEPS;
+
+      if (setCenterAlpha) setCenterAlpha(alpha);
+      if (setCenterY) setCenterY(8 * (1 - alpha));
+
+      section.classList.toggle("show-final-text", alpha > 0.98);
+
+      const IMG_FADE_START = 0.2;
+      const imgFade = gsap.utils.clamp(
+        0,
+        1,
+        (alpha - IMG_FADE_START) / (1 - IMG_FADE_START)
+      );
+
+      images.forEach((_, i) => {
+        const base = i === heroIndex ? 1 : Math.min(1, t * 1.2);
+        setOpacity[i](base * (1 - imgFade));
+      });
+
+      section.classList.toggle("images-hidden", imgFade >= 1);
+    };
+
+    // kill any running intro tween before replay
+    if (introTweenRef.current) {
+      introTweenRef.current.kill();
+      introTweenRef.current = null;
+    }
+
+    // reset state and start
+    apply(0);
+
+    const driver = { p: 0 };
+    introTweenRef.current = gsap.to(driver, {
+      p: 1,
+      duration: 3.6,
+      ease: "sine.inOut",
+      onUpdate: () => apply(driver.p),
+      onComplete: () => {
+        apply(1);
+        onIntroDone?.();
+      },
+    });
+    introTweenRef.current = gsap.to(driver, {
+      p: 1,
+      duration: 3.6,
+      ease: "sine.inOut",
+      onUpdate: () => apply(driver.p),
+      onComplete: () => {
+        apply(1);
+
+        //start bouncing AFTER intro is done (text visible)
+        startBounceUntilScroll();
+
+        onIntroDone?.();
+      },
+    });
+  };
+
+  useLayoutEffect(() => {
+    // start once on mount
+    runIntro();
+    return () => {
+      introTweenRef.current?.kill();
+      introTweenRef.current = null;
+
+      stopBounce(); // kills tween + removes listeners
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section
@@ -283,6 +324,6 @@ const Photos = ({ onIntroDone }) => {
       </div>
     </section>
   );
-};
+});
 
 export default Photos;

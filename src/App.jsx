@@ -14,6 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const App = () => {
   const scrollInitRef = useRef(false);
+  const photosRef = useRef(null);
 
   const initScrollExperience = () => {
     if (scrollInitRef.current) return;
@@ -24,11 +25,8 @@ const App = () => {
     if (!screens.length || !spacer) return;
 
     const n = screens.length;
-
-    // total scroll = N screens * 100vh
     spacer.style.setProperty("--scrollH", `${n * 100}vh`);
 
-    // show first screen
     screens.forEach((s, i) => s.classList.toggle("is-active", i === 0));
     let active = 0;
 
@@ -44,26 +42,18 @@ const App = () => {
       start: "top top",
       end: () => `+=${window.innerHeight * n}`,
       scrub: true,
-
       onUpdate: (self) => {
-        const total = n;
-        const raw = self.progress * total;
+        const raw = self.progress * n;
         let i = Math.floor(raw);
         i = Math.max(0, Math.min(n - 1, i));
 
         const local = raw - i;
-
         const exit = parseFloat(screens[i].dataset.exit || "0.99");
-        if (i < n - 1 && local >= exit) {
-          setActive(i + 1);
-          return;
-        }
+
+        if (i < n - 1 && local >= exit) return setActive(i + 1);
 
         const back = parseFloat(screens[i].dataset.back || "0.15");
-        if (i > 0 && local <= back) {
-          setActive(i - 1);
-          return;
-        }
+        if (i > 0 && local <= back) return setActive(i - 1);
 
         setActive(i);
       },
@@ -71,8 +61,6 @@ const App = () => {
 
     const onResize = () => ScrollTrigger.refresh();
     window.addEventListener("resize", onResize);
-
-    // Make sure ST measurements happen after scroll is enabled
     ScrollTrigger.refresh(true);
 
     return () => {
@@ -81,30 +69,59 @@ const App = () => {
     };
   };
 
+  // lock at first load
   useLayoutEffect(() => {
-    // LOCK SCROLL at the beginning
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
+    return () => (document.body.style.overflow = prevOverflow);
   }, []);
 
   const handleIntroDone = () => {
-    // UNLOCK SCROLL
-    document.body.style.overflow = "";
-
-    // init your scroll-driven experience
+    document.body.style.overflow = ""; // unlock
     initScrollExperience();
+  };
+
+  //  replay intro when user returns to top
+  useLayoutEffect(() => {
+    let rearming = true; // prevents replay loop while staying at top
+    let isReplaying = false;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+
+      // if user moved away from top, allow replay next time they come back
+      if (y > 10) rearming = true;
+
+      // when they reach top again, replay once
+      if (y === 0 && rearming && !isReplaying) {
+        rearming = false;
+        isReplaying = true;
+
+        // lock scrolling during replay
+        document.body.style.overflow = "hidden";
+
+        // replay photos intro
+        photosRef.current?.playIntro();
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  //  small tweak: when intro finishes, clear replay flag
+  const replayFlagRef = useRef(false);
+
+  const handleIntroDoneWrapped = () => {
+    replayFlagRef.current = false;
+    handleIntroDone();
   };
 
   return (
     <main className="page">
-      {/* Intro screen (no scroll) */}
-      <Photos onIntroDone={handleIntroDone} />
+      <Photos ref={photosRef} onIntroDone={handleIntroDoneWrapped} />
 
-      {/* rest of screens (scroll starts AFTER intro is done) */}
       <Carousel />
       <KeyFigures />
       <Headline />
