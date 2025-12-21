@@ -54,7 +54,9 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
 
       stopBounce();
 
-      // snap back nicely
+      // hide hint on first interaction
+      section.classList.remove("show-scroll-hint");
+
       gsap.to(hintIcon, { y: 0, duration: 0.2, ease: "power2.out" });
     };
 
@@ -79,8 +81,8 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
 
     // store cleanup
     stopBounceCleanupRef.current = () => {
-      window.removeEventListener("wheel", onWheel, { passive: true });
-      window.removeEventListener("touchmove", onTouchMove, { passive: true });
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKeyDown);
     };
   };
@@ -92,18 +94,17 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
   };
   const animateCenterTextSplitLines = () => {
     const section = sectionRef.current;
-    if (!section) return;
+    if (!section) return null;
 
     const center = section.querySelector(".impact__center");
     const titleEl = section.querySelector(".impact__center .title");
     const subtitleEl = section.querySelector(".impact__center .subtitle");
-    if (!center || !titleEl || !subtitleEl) return;
+    if (!center || !titleEl || !subtitleEl) return null;
 
     textTweenRef.current?.kill();
     textTweenRef.current = null;
     revertSplit();
 
-    // split
     splitRef.current.title = new SplitText(titleEl, {
       type: "lines",
       linesClass: "split-line",
@@ -118,7 +119,6 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       ...(splitRef.current.subtitle.lines || []),
     ];
 
-    // wrap in masks
     allLines.forEach((line) => {
       const mask = document.createElement("div");
       mask.className = "line-mask";
@@ -126,10 +126,8 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       mask.appendChild(line);
     });
 
-    // crisp start (NO blur)
     gsap.set(allLines, { yPercent: 140, opacity: 0 });
 
-    // text timeline: reveal lines -> then straighten rotation
     const tl = gsap.timeline();
 
     tl.to(allLines, {
@@ -137,7 +135,7 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       opacity: 1,
       duration: 0.85,
       ease: "power3.out",
-      stagger: 0.28, // bigger delay between lines
+      stagger: 0.28,
       clearProps: "transform,opacity",
     });
 
@@ -152,6 +150,7 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     );
 
     textTweenRef.current = tl;
+    return tl;
   };
 
   useImperativeHandle(ref, () => ({
@@ -241,6 +240,7 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       if (setCenterAlpha) setCenterAlpha(0);
       if (setCenterY) setCenterY(0);
       section.classList.remove("show-final-text");
+      section.classList.remove("show-scroll-hint");
     };
 
     // kill any running intro tween before replay
@@ -266,16 +266,25 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       onComplete: () => {
         apply(1);
 
-        // make sure images are hidden
         section.classList.add("images-hidden");
 
-        // show center (but the lines will animate in)
         if (setCenterAlpha) setCenterAlpha(1);
         if (setCenterY) setCenterY(0);
         section.classList.add("show-final-text");
 
-        animateCenterTextSplitLines();
-        startBounceUntilScroll();
+        const tl = animateCenterTextSplitLines();
+
+        if (tl) {
+          tl.eventCallback("onComplete", () => {
+            section.classList.add("show-scroll-hint");
+            startBounceUntilScroll();
+          });
+        } else {
+          // fallback if split didn't run
+          section.classList.add("show-scroll-hint");
+          startBounceUntilScroll();
+        }
+
         onIntroDone?.();
       },
     });
