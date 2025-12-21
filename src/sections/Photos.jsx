@@ -148,7 +148,12 @@ const Photos = () => {
   }, []);
 
   return (
-    <section className="screen" id="screen-4" data-exit="0.85" ref={sectionRef}>
+    <section
+      className="screen"
+      id="screen-4"
+      data-exit="0.999"
+      ref={sectionRef}
+    >
       <div className="impact">
         <div className="impact__center">
           <h2 className="title">
