@@ -1,13 +1,15 @@
 /* -----------------------------
    Base
 ------------------------------ */
-
 @font-face {
-  font-family: "Poppins";
+  font-family: "Poppins-Regular";
   src: url("/assets/fonts/poppins/Poppins-Regular.ttf") format("truetype");
   font-weight: 400;
-  font-size: 64px;
-  font-style: normal;
+}
+@font-face {
+  font-family: "Poppins-Bold";
+  src: url("/assets/fonts/poppins/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
 }
 :root {
   --bg: #eef0f6;
@@ -15,16 +17,15 @@
   --muted: #6b6f7a;
   --accent: #1d56b3;
   --card: rgba(255, 255, 255, 0.72);
-
   --radius-xl: 18px;
   --radius-lg: 14px;
-
   --shadow-soft: 0 18px 50px rgba(20, 30, 50, 0.14);
   --shadow-card: 0 18px 40px rgba(0, 0, 0, 0.12);
-
   --container: min(1100px, 92vw);
+  --text-style-secondary: #464647;
+  --type-size-b1: 16px;
+  --type-size-b2: 14px;
 }
-
 * {
   box-sizing: border-box;
 }
@@ -35,11 +36,12 @@ body {
 
 body {
   margin: 0;
-  font-family: "Poppins";
+  font-family: "Poppins-Regular", sans-serif;
   background: var(--bg);
   color: var(--ink);
   overflow-x: hidden;
 }
+/*General Styling*/
 .page {
   position: relative;
   min-height: 100vh;
@@ -50,9 +52,8 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: url(/assets/images/bg.svg) no-repeat;
+  background: url(/assets/images/ptrn.png) no-repeat;
   background-position: center center;
-  background-size: 100% 82%;
 }
 
 img {
@@ -63,16 +64,24 @@ img {
 .screen {
   position: fixed;
   inset: 0;
+  width: 100vw;
   height: 100vh;
-  z-index: 1;
-  background: transparent;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
+
 .screen.is-active {
+  opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
+
 .scroll-spacer {
   height: var(--scrollH, 700vh);
 }
+
 /* ------------------------------
    Background
    Dotted spiral-ish background
@@ -107,24 +116,27 @@ img {
 }
 
 .title--thin {
-  font-weight: 400;
   font-size: 64px;
+  line-height: 140%;
+  font-weight: 400;
   color: #000;
 }
 
 .title--accent {
-  display: inline-block;
-  font-weight: 800;
-  font-size: clamp(40px, 5.2vw, 74px);
-  color: var(--accent);
+  color: #1a52ae;
+  font-family: "Poppins-Bold", sans-serif;
+  font-weight: 700;
+  line-height: 140%;
+  font-size: 64px;
 }
 
 .subtitle {
-  margin: 18px auto 0;
-  max-width: 780px;
-  color: var(--muted);
-  font-size: clamp(14px, 1.45vw, 18px);
-  line-height: 1.6;
+  color: var(--text-style-secondary, #464647);
+  text-align: center;
+  font-family: "Poppins-Regular", sans-serif;
+  font-size: var(--type-size-b1, 16px);
+  line-height: 150%;
+  font-weight: 400;
 }
 
 /* -----------------------------
@@ -234,26 +246,25 @@ img {
    Scroll hint
 ------------------------------ */
 .scroll-hint {
-  margin-top: 22px;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: rgba(30, 40, 60, 0.7);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -195px;
+  margin-top: 0;
 }
 
 .scroll-hint__icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(30, 40, 60, 0.25);
-  background: rgba(255, 255, 255, 0.35);
 }
 
 .scroll-hint__text {
-  font-size: 12px;
+  color: var(--text-style-secondary, #464647);
+  text-align: center;
+  font-family: "Poppins-Regular", sans-serif;
+  font-size: var(--type-size-b2, 14px);
+  line-height: 150%;
+  font-weight: 400;
 }
 
 /* -----------------------------
@@ -261,8 +272,25 @@ img {
 ------------------------------ */
 .impact {
   width: 100vw;
-  height: 100vh;
+  height: 105vh;
   position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.impact__center {
+  text-align: center;
+  max-width: 900px;
+
+  /* ✅ keep text above background but below images if you want */
+  position: relative;
+  z-index: 2;
+}
+
+/* ✅ keep images above the text */
+.impact__img {
+  position: absolute;
+  z-index: 3;
 }
 
 .impact__img {
@@ -274,11 +302,19 @@ img {
   height: 233px;
 
   object-fit: cover;
-  border-radius: 6px;
-  box-shadow: var(--shadow-card);
+  object-position: 70%;
+  border-radius: 3px;
+  /* start collapsed */
+  --dx: 0px;
+  --dy: 0px;
 
-  transform: translate(-50%, -50%);
+  /* final positions (default) */
+  --fx: 0px;
+  --fy: 0px;
+
+  transform: translate(-50%, -50%) translate(var(--dx), var(--dy));
 }
+
 .impact__stage {
   position: relative;
   width: var(--container);
@@ -303,45 +339,56 @@ img {
   display: block;
 }
 .impact__img--tl {
-  transform: translate(-50%, -50%) translate(-481px, -229.5px);
+  --fx: -510x;
+  --fy: -272px;
 }
 .impact__img--ml {
-  transform: translate(-50%, -50%) translate(-537px, 34.5px);
+  --fx: -567px;
+  --fy: 14.5px;
 }
 .impact__img--bl {
-  transform: translate(-50%, -50%) translate(-442px, 292.5px);
+  --fx: -452px;
+  --fy: 292.5px;
 }
 
 .impact__img--tr {
-  transform: translate(-50%, -50%) translate(-235px, 435.5px);
+  --fx: -245px;
+  --fy: 435.5px;
 }
 .impact__img--mr {
-  transform: translate(-50%, -50%) translate(-13px, 492.5px);
+  --fx: -13px;
+  --fy: 492.5px;
 }
 .impact__img--br {
-  transform: translate(-50%, -50%) translate(241px, 443.5px);
+  --fx: 251px;
+  --fy: 443.5px;
 }
 
 .impact__img--bc {
-  transform: translate(-50%, -50%) translate(451px, 291.5px);
+  --fx: 475px;
+  --fy: 291.5px;
 }
 .impact__img--bm1 {
-  transform: translate(-50%, -50%) translate(536px, 29.5px);
+  --fx: 576px;
+  --fy: 20.5px;
 }
 .impact__img--bm2 {
-  transform: translate(-50%, -50%) translate(492px, -234.5px);
+  --fx: 534px;
+  --fy: -258px;
 }
 
 .impact__img--bm3 {
-  transform: translate(-50%, -50%) translate(294px, -362.5px);
+  --fx: 324px;
+  --fy: -378.5px;
 }
 .impact__img--bm4 {
-  transform: translate(-50%, -50%) translate(4px, -521.5px);
+  --fx: 14px;
+  --fy: -570.5px;
 }
 .impact__img--bm5 {
-  transform: translate(-50%, -50%) translate(-285px, -450.5px);
+  --fx: -302px;
+  --fy: -500.5px;
 }
-
 /* -----------------------------
    Key figures (Screen 5)
 ------------------------------ */
