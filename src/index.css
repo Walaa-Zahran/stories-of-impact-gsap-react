@@ -46,15 +46,24 @@ body {
   position: relative;
   min-height: 100vh;
 }
-.page::before {
-  content: "";
+
+/* ✅ new animated background layer */
+.bg-layer {
   position: fixed;
-  inset: 0;
+  inset: -10%;
   z-index: 0;
   pointer-events: none;
+
   background: url(/assets/images/ptrn.png) no-repeat;
   background-position: center center;
+
+  /* keep the SAME starting size */
+  background-size: auto; /* or contain / cover (pick what matches your current look) */
+
+  transform: scale(1);
+  will-change: transform;
 }
+
 
 img {
   max-width: 100%;

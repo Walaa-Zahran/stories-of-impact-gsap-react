@@ -15,6 +15,7 @@ gsap.registerPlugin(ScrollTrigger);
 const App = () => {
   const scrollInitRef = useRef(false);
   const photosRef = useRef(null);
+  const bgRef = useRef(null);
 
   const initScrollExperience = () => {
     if (scrollInitRef.current) return;
@@ -26,7 +27,20 @@ const App = () => {
 
     const n = screens.length;
     spacer.style.setProperty("--scrollH", `${n * 100}vh`);
-
+    //  Background scale on scroll (starts 1, grows smoothly)
+    if (bgRef.current) {
+      gsap.to(bgRef.current, {
+        scale: 2.2, // how big it gets at the bottom
+        ease: "none", // smooth + consistent with scrub
+        transformOrigin: "50% 40%",
+        scrollTrigger: {
+          trigger: spacer,
+          start: "top top",
+          end: () => `+=${window.innerHeight * n}`,
+          scrub: true,
+        },
+      });
+    }
     screens.forEach((s, i) => s.classList.toggle("is-active", i === 0));
     let active = 0;
 
@@ -120,8 +134,9 @@ const App = () => {
 
   return (
     <main className="page">
-      <Photos ref={photosRef} onIntroDone={handleIntroDoneWrapped} />
+      <div className="bg-layer" ref={bgRef} aria-hidden="true" />
 
+      <Photos ref={photosRef} onIntroDone={handleIntroDoneWrapped} />
       <Carousel />
       <KeyFigures />
       <Headline />
