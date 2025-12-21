@@ -1,23 +1,13 @@
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
-import ScrollTrigger from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
-
-const Photos = () => {
+const Photos = ({ onIntroDone }) => {
   const sectionRef = useRef(null);
 
   useLayoutEffect(() => {
-    let removeResizeListener = null;
-
     const ctx = gsap.context(() => {
       const section = sectionRef.current;
-      const spacer = document.querySelector(".scroll-spacer");
-      if (!section || !spacer) return;
-
-      const screens = Array.from(document.querySelectorAll(".screen"));
-      const index = screens.indexOf(section);
-      if (index < 0) return;
+      if (!section) return;
 
       const images = Array.from(section.querySelectorAll(".impact__img"));
       if (!images.length) return;
@@ -25,7 +15,7 @@ const Photos = () => {
       const hero = section.querySelector(".impact__img--mr") || images[0];
       const heroIndex = images.indexOf(hero);
 
-      //  READ FINAL FROM --fx/--fy
+      // READ FINAL FROM --fx/--fy
       const final = images.map((el) => {
         const cs = getComputedStyle(el);
         return {
@@ -33,37 +23,6 @@ const Photos = () => {
           fy: parseFloat(cs.getPropertyValue("--fy")) || 0,
         };
       });
-
-      const hint = section.querySelector(".scroll-hint");
-      if (hint) {
-        let lowestIndex = 0;
-        for (let i = 1; i < final.length; i++) {
-          if (final[i].fy > final[lowestIndex].fy) lowestIndex = i;
-        }
-
-        const lowestImg = images[lowestIndex];
-
-        const updateHintBottom = () => {
-          const imgH = lowestImg.getBoundingClientRect().height || 233;
-
-          const lowestBottomFromTop =
-            window.innerHeight / 2 + final[lowestIndex].fy + imgH / 2;
-
-          const GAP = 18;
-          const hintBottom = Math.max(
-            16,
-            window.innerHeight - lowestBottomFromTop + GAP
-          );
-
-          section.style.setProperty("--hint-bottom", `${hintBottom}px`);
-        };
-
-        updateHintBottom();
-        window.addEventListener("resize", updateHintBottom);
-
-        removeResizeListener = () =>
-          window.removeEventListener("resize", updateHintBottom);
-      }
 
       const setOpacity = images.map((el) => gsap.quickSetter(el, "opacity"));
       const setScale = images.map((el) => gsap.quickSetter(el, "scale"));
@@ -73,6 +32,7 @@ const Photos = () => {
       const setDY = images.map(
         (el) => (v) => el.style.setProperty("--dy", `${v}px`)
       );
+
       const center = section.querySelector(".impact__center");
       const setCenterAlpha = center
         ? gsap.quickSetter(center, "autoAlpha")
@@ -81,8 +41,6 @@ const Photos = () => {
 
       const apply = (p) => {
         const HOLD = 0.12;
-
-        // initial
 
         if (p <= HOLD) {
           if (setCenterAlpha) setCenterAlpha(0);
@@ -115,11 +73,11 @@ const Photos = () => {
           setScale[i](i === heroIndex ? Math.max(1, pop) : pop);
         });
 
-        //  step-by-step text fade when merged near end
-        //  show text only near the END of the section
-        const TEXT_START = 0.78; // when to start fading in
-        const TEXT_END = 0.98; // when fully visible
-        const STEPS = 10; // step count
+        // step-by-step text fade when merged near end
+        const TEXT_START = 0.78;
+        const TEXT_END = 0.98;
+        const STEPS = 10;
+
         const raw = gsap.utils.clamp(
           0,
           1,
@@ -131,8 +89,9 @@ const Photos = () => {
         if (setCenterY) setCenterY(8 * (1 - alpha));
 
         section.classList.toggle("show-final-text", alpha > 0.98);
-        //  fade images out AFTER merge begins
-        const IMG_FADE_START = 0.2; // start fading images once alpha > 0.2
+
+        // fade images out AFTER text begins
+        const IMG_FADE_START = 0.2;
         const imgFade = gsap.utils.clamp(
           0,
           1,
@@ -140,44 +99,42 @@ const Photos = () => {
         );
 
         images.forEach((_, i) => {
-          // base visibility while spreading
           const base = i === heroIndex ? 1 : Math.min(1, t * 1.2);
-
-          // but once text comes in, fade EVERYTHING out
           const finalOpacity = base * (1 - imgFade);
-          console.log("final opacity", finalOpacity);
           setOpacity[i](finalOpacity);
         });
 
-        // hard hide when fully faded
         section.classList.toggle("images-hidden", imgFade >= 1);
-        console.log("t:", t.toFixed(3), "alpha:", alpha.toFixed(2));
       };
 
-      const st = ScrollTrigger.create({
-        trigger: spacer,
-        start: () => `top+=${index * window.innerHeight} top`,
-        end: () => `top+=${(index + 1) * window.innerHeight} top`,
-        scrub: true,
-        onUpdate: (self) => apply(self.progress),
-        onRefresh: (self) => apply(self.progress),
-        // markers: true,
-      });
+      // Start state
+      apply(0);
 
-      apply(st.progress);
-      ScrollTrigger.refresh();
+      // Drive p: 0 → 1 WITHOUT scroll
+      const driver = { p: 0 };
+
+      gsap.to(driver, {
+        p: 1,
+        duration: 3.6,
+        ease: "sine.inOut",
+        onUpdate: () => apply(driver.p),
+        onComplete: () => {
+          // ensure final state fully applied
+          apply(1);
+
+          // Intro finished, now allow scroll + init ScrollTriggers outside
+          onIntroDone?.();
+        },
+      });
     }, sectionRef);
 
-    return () => {
-      if (removeResizeListener) removeResizeListener();
-      ctx.revert();
-    };
-  }, []);
+    return () => ctx.revert();
+  }, [onIntroDone]);
 
   return (
     <section
-      className="screen"
-      id="screen-4"
+      className="screen is-active"
+      id="screen-0"
       data-exit="0.999"
       ref={sectionRef}
     >

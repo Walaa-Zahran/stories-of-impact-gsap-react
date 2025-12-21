@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 
@@ -13,7 +13,12 @@ import Quotes from "./sections/Quotes";
 gsap.registerPlugin(ScrollTrigger);
 
 const App = () => {
-  useLayoutEffect(() => {
+  const scrollInitRef = useRef(false);
+
+  const initScrollExperience = () => {
+    if (scrollInitRef.current) return;
+    scrollInitRef.current = true;
+
     const screens = Array.from(document.querySelectorAll(".screen"));
     const spacer = document.querySelector(".scroll-spacer");
     if (!screens.length || !spacer) return;
@@ -25,7 +30,6 @@ const App = () => {
 
     // show first screen
     screens.forEach((s, i) => s.classList.toggle("is-active", i === 0));
-
     let active = 0;
 
     const setActive = (next) => {
@@ -42,30 +46,25 @@ const App = () => {
       scrub: true,
 
       onUpdate: (self) => {
-        const total = n; // slices count
-        const raw = self.progress * total; // 0..n
+        const total = n;
+        const raw = self.progress * total;
         let i = Math.floor(raw);
         i = Math.max(0, Math.min(n - 1, i));
 
-        const local = raw - i; // 0..1 progress inside current slice
+        const local = raw - i;
 
-        // your chosen exit point (default 0.98 if not provided)
         const exit = parseFloat(screens[i].dataset.exit || "0.99");
-
         if (i < n - 1 && local >= exit) {
           setActive(i + 1);
           return;
         }
 
-        // backward: add a small "re-enter threshold" to avoid flicker
-        // if user scrolls up, switch back when we're early in slice
         const back = parseFloat(screens[i].dataset.back || "0.15");
         if (i > 0 && local <= back) {
           setActive(i - 1);
           return;
         }
 
-        // otherwise keep current i visible
         setActive(i);
       },
     });
@@ -73,15 +72,39 @@ const App = () => {
     const onResize = () => ScrollTrigger.refresh();
     window.addEventListener("resize", onResize);
 
+    // Make sure ST measurements happen after scroll is enabled
+    ScrollTrigger.refresh(true);
+
     return () => {
       window.removeEventListener("resize", onResize);
       st.kill();
     };
+  };
+
+  useLayoutEffect(() => {
+    // LOCK SCROLL at the beginning
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
   }, []);
+
+  const handleIntroDone = () => {
+    // UNLOCK SCROLL
+    document.body.style.overflow = "";
+
+    // init your scroll-driven experience
+    initScrollExperience();
+  };
 
   return (
     <main className="page">
-      <Photos />
+      {/* Intro screen (no scroll) */}
+      <Photos onIntroDone={handleIntroDone} />
+
+      {/* rest of screens (scroll starts AFTER intro is done) */}
       <Carousel />
       <KeyFigures />
       <Headline />
