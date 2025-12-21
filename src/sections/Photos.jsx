@@ -109,6 +109,63 @@ const Photos = ({ onIntroDone }) => {
 
       // Start state
       apply(0);
+      // ---- bounce scroll hint icon until user scrolls ----
+      const hintIcon = section.querySelector(".scroll-hint__icon img");
+
+      let bounceTween = null;
+
+      if (hintIcon) {
+        // start bouncing (yoyo)
+        bounceTween = gsap.to(hintIcon, {
+          y: 10,
+          duration: 0.6,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+        });
+      }
+
+      // stop bouncing on first real scroll (wheel / touch / key)
+      let stopped = false;
+
+      const stopBounce = () => {
+        if (stopped) return;
+        stopped = true;
+
+        if (bounceTween) {
+          bounceTween.kill();
+          bounceTween = null;
+        }
+
+        // snap back nicely
+        if (hintIcon)
+          gsap.to(hintIcon, { y: 0, duration: 0.2, ease: "power2.out" });
+
+        // remove listeners
+        window.removeEventListener("wheel", onWheel, { passive: true });
+        window.removeEventListener("touchmove", onTouchMove, { passive: true });
+        window.removeEventListener("keydown", onKeyDown);
+      };
+
+      const onWheel = () => stopBounce();
+      const onTouchMove = () => stopBounce();
+      const onKeyDown = (e) => {
+        // keys that usually scroll
+        const keys = [
+          "ArrowDown",
+          "ArrowUp",
+          "PageDown",
+          "PageUp",
+          "Home",
+          "End",
+          " ",
+        ];
+        if (keys.includes(e.key)) stopBounce();
+      };
+
+      window.addEventListener("wheel", onWheel, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: true });
+      window.addEventListener("keydown", onKeyDown);
 
       // Drive p: 0 → 1 WITHOUT scroll
       const driver = { p: 0 };
