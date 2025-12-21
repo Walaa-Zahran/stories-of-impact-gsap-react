@@ -5,11 +5,18 @@ import {
   useRef,
 } from "react";
 import gsap from "gsap";
+import SplitText from "gsap/SplitText";
+
+gsap.registerPlugin(SplitText);
+
 const Photos = forwardRef(({ onIntroDone }, ref) => {
   const bounceTweenRef = useRef(null);
   const stopBounceCleanupRef = useRef(null);
   const sectionRef = useRef(null);
   const introTweenRef = useRef(null);
+  const splitRef = useRef({ title: null, subtitle: null });
+  const textTweenRef = useRef(null);
+
   const stopBounce = () => {
     // kill tween
     bounceTweenRef.current?.kill();
@@ -33,7 +40,7 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     // start bounce
     bounceTweenRef.current = gsap.to(hintIcon, {
       y: 10,
-      duration: 0.6,
+      duration: 0.8,
       ease: "sine.inOut",
       yoyo: true,
       repeat: -1,
@@ -77,6 +84,75 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       window.removeEventListener("keydown", onKeyDown);
     };
   };
+  const revertSplit = () => {
+    splitRef.current.title?.revert();
+    splitRef.current.subtitle?.revert();
+    splitRef.current.title = null;
+    splitRef.current.subtitle = null;
+  };
+  const animateCenterTextSplitLines = () => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const center = section.querySelector(".impact__center");
+    const titleEl = section.querySelector(".impact__center .title");
+    const subtitleEl = section.querySelector(".impact__center .subtitle");
+    if (!center || !titleEl || !subtitleEl) return;
+
+    textTweenRef.current?.kill();
+    textTweenRef.current = null;
+    revertSplit();
+
+    // split
+    splitRef.current.title = new SplitText(titleEl, {
+      type: "lines",
+      linesClass: "split-line",
+    });
+    splitRef.current.subtitle = new SplitText(subtitleEl, {
+      type: "lines",
+      linesClass: "split-line",
+    });
+
+    const allLines = [
+      ...(splitRef.current.title.lines || []),
+      ...(splitRef.current.subtitle.lines || []),
+    ];
+
+    // wrap in masks
+    allLines.forEach((line) => {
+      const mask = document.createElement("div");
+      mask.className = "line-mask";
+      line.parentNode.insertBefore(mask, line);
+      mask.appendChild(line);
+    });
+
+    // crisp start (NO blur)
+    gsap.set(allLines, { yPercent: 140, opacity: 0 });
+
+    // text timeline: reveal lines -> then straighten rotation
+    const tl = gsap.timeline();
+
+    tl.to(allLines, {
+      yPercent: 0,
+      opacity: 1,
+      duration: 0.85,
+      ease: "power3.out",
+      stagger: 0.28, // bigger delay between lines
+      clearProps: "transform,opacity",
+    });
+
+    tl.to(
+      center,
+      {
+        rotation: 0,
+        duration: 0.7,
+        ease: "power3.out",
+      },
+      "+=0.15"
+    );
+
+    textTweenRef.current = tl;
+  };
 
   useImperativeHandle(ref, () => ({
     playIntro: () => {
@@ -111,34 +187,28 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       (el) => (v) => el.style.setProperty("--dy", `${v}px`)
     );
 
+    // center setters (DECLARE center BEFORE using it)
     const center = section.querySelector(".impact__center");
+    if (center) {
+      gsap.set(center, {
+        rotation: -5,
+        y: -30, // move up
+        transformOrigin: "50% 50%",
+      });
+    }
+
     const setCenterAlpha = center
       ? gsap.quickSetter(center, "autoAlpha")
       : null;
     const setCenterY = center ? gsap.quickSetter(center, "y") : null;
 
     const apply = (p) => {
-      const HOLD = 0.12;
+      const HOLD = 0; // start immediately (no static hold)
 
-      if (p <= HOLD) {
-        if (setCenterAlpha) setCenterAlpha(0);
-        if (setCenterY) setCenterY(8);
+      // pp is normalized progress for the "main" animation segment
+      const pp = HOLD === 0 ? p : (p - HOLD) / (1 - HOLD);
 
-        section.classList.remove("show-final-text");
-        section.classList.remove("images-hidden");
-
-        images.forEach((_, i) => {
-          setScale[i](0.98);
-          setOpacity[i](i === heroIndex ? 1 : 0);
-
-          setDX;
-          setDY;
-        });
-
-        return;
-      }
-
-      const pp = (p - HOLD) / (1 - HOLD);
+      // --- image spread in/out ---
       const MID = 0.55;
       const t = pp <= MID ? pp / MID : (1 - pp) / (1 - MID);
 
@@ -150,27 +220,14 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
         setScale[i](i === heroIndex ? Math.max(1, pop) : pop);
       });
 
-      const TEXT_START = 0.78;
-      const TEXT_END = 0.98;
-      const STEPS = 10;
+      // fade images out near the end (independent from text)
+      const IMG_FADE_START = 0.75;
+      const IMG_FADE_END = 1;
 
-      const raw = gsap.utils.clamp(
-        0,
-        1,
-        (pp - TEXT_START) / (TEXT_END - TEXT_START)
-      );
-      const alpha = Math.round(raw * STEPS) / STEPS;
-
-      if (setCenterAlpha) setCenterAlpha(alpha);
-      if (setCenterY) setCenterY(8 * (1 - alpha));
-
-      section.classList.toggle("show-final-text", alpha > 0.98);
-
-      const IMG_FADE_START = 0.2;
       const imgFade = gsap.utils.clamp(
         0,
         1,
-        (alpha - IMG_FADE_START) / (1 - IMG_FADE_START)
+        (pp - IMG_FADE_START) / (IMG_FADE_END - IMG_FADE_START)
       );
 
       images.forEach((_, i) => {
@@ -179,39 +236,46 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       });
 
       section.classList.toggle("images-hidden", imgFade >= 1);
+
+      // keep center hidden the whole time
+      if (setCenterAlpha) setCenterAlpha(0);
+      if (setCenterY) setCenterY(0);
+      section.classList.remove("show-final-text");
     };
 
     // kill any running intro tween before replay
-    if (introTweenRef.current) {
-      introTweenRef.current.kill();
-      introTweenRef.current = null;
-    }
+    introTweenRef.current?.kill();
+    introTweenRef.current = null;
+
+    textTweenRef.current?.kill();
+    textTweenRef.current = null;
+
+    revertSplit();
 
     // reset state and start
     apply(0);
 
     const driver = { p: 0 };
+
+    // IMPORTANT: keep only ONE tween (you had it duplicated)
     introTweenRef.current = gsap.to(driver, {
       p: 1,
-      duration: 3.6,
-      ease: "sine.inOut",
-      onUpdate: () => apply(driver.p),
-      onComplete: () => {
-        apply(1);
-        onIntroDone?.();
-      },
-    });
-    introTweenRef.current = gsap.to(driver, {
-      p: 1,
-      duration: 3.6,
+      duration: 4.6,
       ease: "sine.inOut",
       onUpdate: () => apply(driver.p),
       onComplete: () => {
         apply(1);
 
-        //start bouncing AFTER intro is done (text visible)
+        // make sure images are hidden
+        section.classList.add("images-hidden");
+
+        // show center (but the lines will animate in)
+        if (setCenterAlpha) setCenterAlpha(1);
+        if (setCenterY) setCenterY(0);
+        section.classList.add("show-final-text");
+
+        animateCenterTextSplitLines();
         startBounceUntilScroll();
-
         onIntroDone?.();
       },
     });
@@ -223,6 +287,9 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     return () => {
       introTweenRef.current?.kill();
       introTweenRef.current = null;
+
+      textTweenRef.current?.kill();
+      textTweenRef.current = null;
 
       stopBounce(); // kills tween + removes listeners
     };
