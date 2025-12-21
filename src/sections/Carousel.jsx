@@ -10,7 +10,6 @@ const Carousel = () => {
               <p className="story-card__meta">Empowering Futures</p>
             </div>
           </article>
-
           <article className="story-card story-card--secondary">
             <img className="story-card__img" src="assets/story-2.jpg" alt="" />
             <div className="story-card__overlay">
@@ -18,13 +17,11 @@ const Carousel = () => {
               <p className="story-card__meta">Innovative Journeys</p>
             </div>
           </article>
-
           <article className="story-card story-card--secondary">
             <img className="story-card__img" src="assets/story-3.jpg" alt="" />
-            <div className="story-card__overlay">
-              <h3 className="story-card__title">Built for Tomorrow</h3>
-              <p className="story-card__meta">Creating Momentum</p>
-            </div>
+          </article>
+          <article className="story-card story-card--secondary">
+            <img className="story-card__img" src="assets/story-3.jpg" alt="" />
           </article>
         </div>
       </div>
