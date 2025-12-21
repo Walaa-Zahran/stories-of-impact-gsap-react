@@ -83,18 +83,23 @@ const Photos = () => {
         const HOLD = 0.12;
 
         // initial
+
         if (p <= HOLD) {
           if (setCenterAlpha) setCenterAlpha(0);
           if (setCenterY) setCenterY(8);
+
           section.classList.remove("show-final-text");
           section.classList.remove("images-hidden");
 
           images.forEach((_, i) => {
             setScale[i](0.98);
             setOpacity[i](i === heroIndex ? 1 : 0);
+
+            // reset back to center
             setDX;
             setDY;
           });
+
           return;
         }
 

@@ -273,6 +273,7 @@ img {
 .impact {
   width: 100vw;
   height: 105vh;
+  
   position: relative;
   display: grid;
   place-items: center;
@@ -291,7 +292,7 @@ img {
   z-index: 3;
 
   left: 50%;
-  top: 50%;
+  top: 52vh;
 
   width: 175px;
   height: 233px;
@@ -345,7 +346,7 @@ img {
   display: block;
 }
 .impact__img--tl {
-  --fx: -510px;
+  --fx: -504px;
   --fy: -272px;
 }
 .impact__img--ml {
@@ -353,7 +354,7 @@ img {
   --fy: 14.5px;
 }
 .impact__img--bl {
-  --fx: -452px;
+  --fx: -470px;
   --fy: 292.5px;
 }
 
@@ -375,21 +376,22 @@ img {
   --fy: 291.5px;
 }
 .impact__img--bm1 {
-  --fx: 576px;
+  --fx: 562px;
   --fy: 20.5px;
 }
 .impact__img--bm2 {
-  --fx: 534px;
-  --fy: -258px;
+  --fx: 514px;
+  --fy: -247px;
 }
 
 .impact__img--bm3 {
-  --fx: 324px;
-  --fy: -378.5px;
+  --fx: 307px;
+  --fy: -373.5px;    
+  object-fit: fill;
 }
 .impact__img--bm4 {
-  --fx: 14px;
-  --fy: -570.5px;
+  --fx: 8px;
+  --fy: -563.5px;
 }
 .impact__img--bm5 {
   --fx: -302px;

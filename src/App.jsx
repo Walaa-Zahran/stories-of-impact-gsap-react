@@ -49,6 +49,7 @@ const App = () => {
 
         const local = raw - i; // 0..1 progress inside current slice
 
+        // your chosen exit point (default 0.98 if not provided)
         const exit = parseFloat(screens[i].dataset.exit || "0.99");
 
         if (i < n - 1 && local >= exit) {
