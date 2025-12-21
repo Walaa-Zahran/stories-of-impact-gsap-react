@@ -279,15 +279,12 @@ img {
 }
 
 .impact__center {
-  text-align: center;
-  max-width: 900px;
-
-  /* ✅ keep text above background but below images if you want */
-  position: relative;
-  z-index: 2;
+  opacity: 0; /* start hidden */
+  transform: translateY(8px);
+  transition: opacity 0.2s linear, transform 0.2s ease;
 }
 
-/* ✅ keep images above the text */
+/*  keep images above the text */
 .impact__img {
   position: absolute;
   z-index: 3;

@@ -25,7 +25,7 @@ const Photos = () => {
       const hero = section.querySelector(".impact__img--mr") || images[0];
       const heroIndex = images.indexOf(hero);
 
-      // ✅ READ FINAL FROM --fx/--fy
+      //  READ FINAL FROM --fx/--fy
       const final = images.map((el) => {
         const cs = getComputedStyle(el);
         return {
@@ -34,7 +34,7 @@ const Photos = () => {
         };
       });
 
-      // ✅ Position scroll-hint just above the lowest image (based on final fy)
+      //  Position scroll-hint just above the lowest image (based on final fy)
       const hint = section.querySelector(".scroll-hint");
       if (hint) {
         let lowestIndex = 0;
@@ -76,14 +76,20 @@ const Photos = () => {
       const setDY = images.map(
         (el) => (v) => el.style.setProperty("--dy", `${v}px`)
       );
-
       const apply = (p) => {
         const HOLD = 0.12;
+        const center = section.querySelector(".impact__center");
+        const setCenterAlpha = center
+          ? gsap.quickSetter(center, "autoAlpha")
+          : null;
+        const setCenterY = center ? gsap.quickSetter(center, "y") : null;
+
+        //  text should NOT show at the beginning
+        if (setCenterAlpha) setCenterAlpha(0);
+        if (setCenterY) setCenterY(8);
 
         if (p <= HOLD) {
           images.forEach((_, i) => {
-            setDX;
-            setDY;
             setScale[i](0.98);
             setOpacity[i](i === heroIndex ? 1 : 0);
           });
@@ -93,6 +99,21 @@ const Photos = () => {
         const pp = (p - HOLD) / (1 - HOLD);
         const MID = 0.55;
         const t = pp <= MID ? pp / MID : (1 - pp) / (1 - MID);
+
+        //  SHOW TEXT ONLY when images are returning AND almost collapsed again
+        // return phase = pp > MID
+        // collapsed again = t near 0
+        if (setCenterAlpha && pp > MID) {
+          const SHOW_WINDOW = 0.12; // how close to the end before it starts appearing
+          const alpha = gsap.utils.clamp(0, 1, (SHOW_WINDOW - t) / SHOW_WINDOW);
+          setCenterAlpha(alpha);
+
+          // float up slightly as it appears
+          if (setCenterY) setCenterY(8 * (1 - alpha));
+        } else {
+          if (setCenterAlpha) setCenterAlpha(0);
+          if (setCenterY) setCenterY(8);
+        }
 
         images.forEach((_, i) => {
           setDX[i](final[i].fx * t);
