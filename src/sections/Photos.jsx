@@ -34,7 +34,6 @@ const Photos = () => {
         };
       });
 
-      //  Position scroll-hint just above the lowest image (based on final fy)
       const hint = section.querySelector(".scroll-hint");
       if (hint) {
         let lowestIndex = 0;
@@ -47,7 +46,6 @@ const Photos = () => {
         const updateHintBottom = () => {
           const imgH = lowestImg.getBoundingClientRect().height || 233;
 
-          // bottom edge of the lowest image when spread
           const lowestBottomFromTop =
             window.innerHeight / 2 + final[lowestIndex].fy + imgH / 2;
 
@@ -63,7 +61,6 @@ const Photos = () => {
         updateHintBottom();
         window.addEventListener("resize", updateHintBottom);
 
-        // store cleanup (DON'T use ctx.add here)
         removeResizeListener = () =>
           window.removeEventListener("resize", updateHintBottom);
       }
@@ -76,44 +73,34 @@ const Photos = () => {
       const setDY = images.map(
         (el) => (v) => el.style.setProperty("--dy", `${v}px`)
       );
+      const center = section.querySelector(".impact__center");
+      const setCenterAlpha = center
+        ? gsap.quickSetter(center, "autoAlpha")
+        : null;
+      const setCenterY = center ? gsap.quickSetter(center, "y") : null;
+
       const apply = (p) => {
         const HOLD = 0.12;
-        const center = section.querySelector(".impact__center");
-        const setCenterAlpha = center
-          ? gsap.quickSetter(center, "autoAlpha")
-          : null;
-        const setCenterY = center ? gsap.quickSetter(center, "y") : null;
 
-        //  text should NOT show at the beginning
-        if (setCenterAlpha) setCenterAlpha(0);
-        if (setCenterY) setCenterY(8);
-
+        // initial
         if (p <= HOLD) {
+          if (setCenterAlpha) setCenterAlpha(0);
+          if (setCenterY) setCenterY(8);
+          section.classList.remove("show-final-text");
+          section.classList.remove("images-hidden");
+
           images.forEach((_, i) => {
             setScale[i](0.98);
             setOpacity[i](i === heroIndex ? 1 : 0);
+            setDX;
+            setDY;
           });
           return;
         }
 
         const pp = (p - HOLD) / (1 - HOLD);
         const MID = 0.55;
-        const t = pp <= MID ? pp / MID : (1 - pp) / (1 - MID);
-
-        //  SHOW TEXT ONLY when images are returning AND almost collapsed again
-        // return phase = pp > MID
-        // collapsed again = t near 0
-        if (setCenterAlpha && pp > MID) {
-          const SHOW_WINDOW = 0.12; // how close to the end before it starts appearing
-          const alpha = gsap.utils.clamp(0, 1, (SHOW_WINDOW - t) / SHOW_WINDOW);
-          setCenterAlpha(alpha);
-
-          // float up slightly as it appears
-          if (setCenterY) setCenterY(8 * (1 - alpha));
-        } else {
-          if (setCenterAlpha) setCenterAlpha(0);
-          if (setCenterY) setCenterY(8);
-        }
+        const t = pp <= MID ? pp / MID : (1 - pp) / (1 - MID); // 1 spread, 0 merged
 
         images.forEach((_, i) => {
           setDX[i](final[i].fx * t);
@@ -121,10 +108,45 @@ const Photos = () => {
 
           const pop = 0.85 + 0.15 * t;
           setScale[i](i === heroIndex ? Math.max(1, pop) : pop);
-
-          const opacity = i === heroIndex ? 1 : Math.min(1, t * 1.2);
-          setOpacity[i](opacity);
         });
+
+        //  step-by-step text fade when merged near end
+        //  show text only near the END of the section
+        const TEXT_START = 0.78; // when to start fading in
+        const TEXT_END = 0.98; // when fully visible
+        const STEPS = 10; // step count
+        const raw = gsap.utils.clamp(
+          0,
+          1,
+          (pp - TEXT_START) / (TEXT_END - TEXT_START)
+        );
+        const alpha = Math.round(raw * STEPS) / STEPS;
+
+        if (setCenterAlpha) setCenterAlpha(alpha);
+        if (setCenterY) setCenterY(8 * (1 - alpha));
+
+        section.classList.toggle("show-final-text", alpha > 0.98);
+        //  fade images out AFTER merge begins
+        const IMG_FADE_START = 0.2; // start fading images once alpha > 0.2
+        const imgFade = gsap.utils.clamp(
+          0,
+          1,
+          (alpha - IMG_FADE_START) / (1 - IMG_FADE_START)
+        );
+
+        images.forEach((_, i) => {
+          // base visibility while spreading
+          const base = i === heroIndex ? 1 : Math.min(1, t * 1.2);
+
+          // but once text comes in, fade EVERYTHING out
+          const finalOpacity = base * (1 - imgFade);
+          console.log("final opacity", finalOpacity);
+          setOpacity[i](finalOpacity);
+        });
+
+        // hard hide when fully faded
+        section.classList.toggle("images-hidden", imgFade >= 1);
+        console.log("t:", t.toFixed(3), "alpha:", alpha.toFixed(2));
       };
 
       const st = ScrollTrigger.create({

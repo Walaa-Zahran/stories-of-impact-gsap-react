@@ -281,17 +281,15 @@ img {
 .impact__center {
   opacity: 0; /* start hidden */
   transform: translateY(8px);
-  transition: opacity 0.2s linear, transform 0.2s ease;
+  transition: none;
+  z-index: 2;
 }
 
 /*  keep images above the text */
 .impact__img {
   position: absolute;
   z-index: 3;
-}
 
-.impact__img {
-  position: absolute;
   left: 50%;
   top: 50%;
 
@@ -312,6 +310,13 @@ img {
   transform: translate(-50%, -50%) translate(var(--dx), var(--dy));
 }
 
+
+.screen.images-hidden .impact__img {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+
 .impact__stage {
   position: relative;
   width: var(--container);
@@ -323,7 +328,11 @@ img {
   text-align: center;
   max-width: 900px;
 }
-
+.screen.show-final-text .impact__center { 
+  z-index: 999; 
+  position: relative;
+  opacity: 1;
+}
 .story-card__img {
   width: 175px !important;
   height: 233px !important;
@@ -336,7 +345,7 @@ img {
   display: block;
 }
 .impact__img--tl {
-  --fx: -510x;
+  --fx: -510px;
   --fy: -272px;
 }
 .impact__img--ml {
