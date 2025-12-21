@@ -139,11 +139,11 @@ const App = () => {
 
       <Photos ref={photosRef} onIntroDone={handleIntroDoneWrapped} />
       <Carousel />
-      <KeyFigures />
+      {/* <KeyFigures />
       <Headline />
       <Title />
       <Quotes />
-      <CTA />
+      <CTA /> */}
 
       <div className="scroll-spacer" />
     </main>

@@ -1,34 +1,62 @@
 const Carousel = () => {
   return (
-    <section className="screen" id="screen-2">
+    <section className="screen bg-dots" id="screen-2">
       <div className="carousel">
         <div className="carousel__track">
+          {/* back cards (center faded) */}
+          <article
+            className="story-card story-card--back back-1"
+            aria-hidden="true"
+          >
+            <img
+              className="story-card__img"
+              src="assets/images/carousel-3.png"
+              alt=""
+            />
+          </article>
+
+          <article
+            className="story-card story-card--back back-2"
+            aria-hidden="true"
+          >
+            <img
+              className="story-card__img"
+              src="assets/images/carousel-4.png"
+              alt=""
+            />
+          </article>
+
+          {/* main left card */}
           <article className="story-card story-card--primary">
-            <img className="story-card__img" src="assets/story-1.jpg" alt="" />
+            <img
+              className="story-card__img"
+              src="assets/images/carousel-1.png"
+              alt=""
+            />
             <div className="story-card__overlay">
               <h3 className="story-card__title">From Purpose to Progress</h3>
               <p className="story-card__meta">Empowering Futures</p>
             </div>
           </article>
-          <article className="story-card story-card--secondary">
-            <img className="story-card__img" src="assets/story-2.jpg" alt="" />
+
+          {/* right card */}
+          <article className="story-card story-card--secondary right">
+            <img
+              className="story-card__img"
+              src="assets/images/carousel-2.png"
+              alt=""
+            />
             <div className="story-card__overlay">
               <h3 className="story-card__title">Vision Turned Venture</h3>
               <p className="story-card__meta">Innovative Journeys</p>
             </div>
-          </article>
-          <article className="story-card story-card--secondary">
-            <img className="story-card__img" src="assets/story-3.jpg" alt="" />
-          </article>
-          <article className="story-card story-card--secondary">
-            <img className="story-card__img" src="assets/story-3.jpg" alt="" />
           </article>
         </div>
       </div>
 
       <div className="progress">
         <span className="progress__track"></span>
-        <span className="progress__fill"></span>
+        <span className="progress__fill" style={{ "--p": "35%" }}></span>
       </div>
     </section>
   );

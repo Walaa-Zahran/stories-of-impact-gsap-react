@@ -19,6 +19,7 @@
   --muted: #6b6f7a;
   --accent: #1d56b3;
   --card: rgba(255, 255, 255, 0.72);
+  --radius-sm: 4px;
   --radius-xl: 18px;
   --radius-lg: 14px;
   --shadow-soft: 0 18px 50px rgba(20, 30, 50, 0.14);
@@ -67,7 +68,6 @@ body {
   will-change: transform;
 }
 
-
 img {
   max-width: 100%;
   display: block;
@@ -83,7 +83,6 @@ img {
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.2s ease;
-
 }
 
 .screen.is-active {
@@ -98,15 +97,14 @@ img {
 
 /* ------------------------------
    Background
-   Dotted spiral-ish background
-   (CSS-only approximation)
 ------------------------------ */
 .bg-dots {
   background: url(/assets/images/bg.svg) no-repeat;
   background-position: center center;
+  background-size: auto;
 }
 
-.screen>* {
+.screen > * {
   position: relative;
   z-index: 1;
 }
@@ -164,7 +162,6 @@ img {
   will-change: transform, opacity, filter;
 }
 
-
 /* -----------------------------
    Progress indicator (bottom)
 ------------------------------ */
@@ -198,57 +195,86 @@ img {
 }
 
 /* -----------------------------
-   Carousel (Screen 2)
+   Carousel (Screen 2) - UPDATED to match screenshot
 ------------------------------ */
 .carousel {
   width: var(--container);
+  height: 100vh;
   display: grid;
   place-items: center;
+  margin: 0 auto;
 }
 
 .carousel__track {
-  display: flex;
-  gap: clamp(16px, 3vw, 34px);
-  align-items: center;
-  overflow-x: auto;
-  padding: 10px 10px 20px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  width: 100%;
-}
-
-.carousel__track::-webkit-scrollbar {
-  display: none;
-}
-
-.story-card {
   position: relative;
-  border-radius: var(--radius-xl);
+  width: 100%;
+  height: 560px;
+  max-height: 70vh;
+}
+/* All cards are absolutely positioned relative to the track */
+.story-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 6px;
   overflow: hidden;
-  scroll-snap-align: center;
   box-shadow: var(--shadow-card);
-  flex: 0 0 auto;
+  transform: translate(-50%, -50%);
 }
 
 .story-card--primary {
-  width: clamp(260px, 34vw, 440px);
-  aspect-ratio: 4 / 5;
+  transform: translate(-50%, -50%) translateX(clamp(-220px, -12vw, -140px));
 }
 
-.story-card--secondary {
-  width: clamp(220px, 26vw, 340px);
-  aspect-ratio: 4 / 5;
-  opacity: 0.95;
-  transform: translateY(4px);
+.story-card--secondary.right {
+  transform: translate(-50%, -50%) translateX(clamp(140px, 14vw, 240px))
+    translateY(clamp(10px, 3vh, 40px));
 }
 
+/* Positions (tuned like screenshot) */
+.story-card--primary {
+  z-index: 3;
+  transform: translate(-50%, -50%) translateX(-253px) translateY(40px);
+}
+
+.story-card--secondary.right {
+  z-index: 3;
+  transform: translate(-50%, -50%) translateX(300px) translateY(0px);
+}
+
+/* Back cards centered behind */
+.story-card--back {
+  width: clamp(170px, 18vw, 240px);
+  aspect-ratio: 4 / 5;
+  opacity: 0.45;
+  filter: blur(0.4px);
+  z-index: 1;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+}
+
+.story-card--back.back-1 {
+  transform: translate(-50%, -50%) translateX(206px) translateY(-162px);
+  scale: 0.4;
+}
+.story-card--back.back-1 .story-card__img {
+  object-fit: contain;
+  object-position: -20%;
+}
+.story-card--back.back-2 {
+  z-index: 2;
+  opacity: 0.55;
+  filter: blur(0.25px);
+  transform: translate(-50%, -50%) translateX(-90px) translateY(10px);
+}
+
+/* Image fill */
 .story-card__img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* screenshot look */
+  object-position: center;
+  display: block;
 }
-
 .story-card__overlay {
   position: absolute;
   inset: auto 0 0 0;
@@ -289,6 +315,7 @@ img {
   visibility: visible;
   transform: translateX(-50%) translateY(0);
 }
+
 .scroll-hint__icon {
   display: grid;
   place-items: center;
@@ -320,8 +347,6 @@ img {
   transform-origin: 50% 50%;
 }
 
-
-
 /*  keep images above the text */
 .impact__img {
   position: absolute;
@@ -336,6 +361,7 @@ img {
   object-fit: cover;
   object-position: 70%;
   border-radius: 3px;
+
   /* start collapsed */
   --dx: 0px;
   --dy: 0px;
@@ -347,12 +373,10 @@ img {
   transform: translate(-50%, -50%) translate(var(--dx), var(--dy));
 }
 
-
 .screen.images-hidden .impact__img {
   visibility: hidden;
   pointer-events: none;
 }
-
 
 .impact__stage {
   position: relative;
@@ -364,25 +388,12 @@ img {
 .impact__center {
   text-align: center;
   max-width: 900px;
-
 }
 
 .screen.show-final-text .impact__center {
   z-index: 999;
   position: relative;
   opacity: 1;
-}
-
-.story-card__img {
-  width: 175px !important;
-  height: 233px !important;
-
-  object-fit: cover;
-  object-position: center;
-
-  border-radius: 6px;
-  overflow: hidden;
-  display: block;
 }
 
 .impact__img--tl {
@@ -576,6 +587,27 @@ img {
 
   .figure-card--side,
   .figure-card--ghost {
+    display: none;
+  }
+
+  /* stack carousel cards on mobile */
+  .carousel {
+    height: auto;
+    padding: 40px 0 80px;
+  }
+
+  .carousel__track {
+    min-height: auto;
+    display: grid;
+    gap: 18px;
+  }
+
+  .story-card--primary,
+  .story-card--secondary.right {
+    transform: none;
+  }
+
+  .story-card--back {
     display: none;
   }
 
