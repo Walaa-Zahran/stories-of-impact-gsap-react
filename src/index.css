@@ -47,7 +47,6 @@ body {
   min-height: 100vh;
 }
 
-/* ✅ new animated background layer */
 .bg-layer {
   position: fixed;
   inset: -10%;
@@ -58,8 +57,7 @@ body {
   background-position: center center;
 
   /* keep the SAME starting size */
-  background-size: auto; /* or contain / cover (pick what matches your current look) */
-
+  background-size: auto; 
   transform: scale(1);
   will-change: transform;
 }
