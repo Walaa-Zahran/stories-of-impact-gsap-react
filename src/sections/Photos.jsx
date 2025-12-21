@@ -192,7 +192,7 @@ const Photos = ({ onIntroDone }) => {
     <section
       className="screen is-active"
       id="screen-0"
-      data-exit="0.999"
+      data-exit="0.02"
       ref={sectionRef}
     >
       <div className="impact">
