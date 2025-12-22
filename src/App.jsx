@@ -73,6 +73,9 @@ const App = () => {
       progressFill.style.setProperty("--p", `${percent}%`);
     };
     // -------------------------------------------------------------------
+    // ✅ FULL UPDATED setupCarouselMotion()
+    // Drop this inside initScrollExperience() and replace your current setupCarouselMotion()
+
     const setupCarouselMotion = () => {
       const screen2 = document.querySelector("#screen-2");
       if (!screen2) return;
@@ -85,17 +88,18 @@ const App = () => {
       const getVar = (el, name) =>
         parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
 
+      // 3D space
       gsap.set(track, {
         transformPerspective: 1100,
         transformStyle: "preserve-3d",
       });
 
-      // Start stacked, tiny, center (BUT visible quickly)
+      // ---- Cards start: tiny at center, stacked ----
       gsap.set(cards, {
         x: 0,
         y: 0,
         z: -180,
-        scale: 0.12, // not too tiny (so you see them immediately)
+        scale: 0.12,
         opacity: 0,
         rotateX: 10,
         rotateY: -8,
@@ -103,18 +107,19 @@ const App = () => {
         filter: "blur(4px)",
       });
 
+      // ---- Text start: hidden + more blur ----
       if (bgTextInner) {
         gsap.set(bgTextInner, {
           opacity: 0,
-          filter: "blur(16px)",
+          scale: 0.55,
           z: -120,
-          scale: 0.95,
+          filter: "blur(16px)",
         });
       }
 
       const tl = gsap.timeline({ paused: true });
 
-      // 0) Appear immediately (small wave)
+      // 0) Cards appear fast
       tl.to(cards, {
         opacity: 1,
         filter: "blur(0px)",
@@ -123,7 +128,23 @@ const App = () => {
         stagger: { each: 0.03, from: "center" },
       });
 
-      // 1) Grow in place (still centered)
+      // TEXT: starts showing while cards begin (still blurry)
+      if (bgTextInner) {
+        tl.to(
+          bgTextInner,
+          {
+            opacity: 0.4,
+            scale: 1,
+            z: 0,
+            filter: "blur(8px)", // still blurry while the wave/spread starts
+            duration: 0.55,
+            ease: "power2.out",
+          },
+          0 // start at timeline beginning
+        );
+      }
+
+      // 1) Cards grow in place (still centered)
       tl.to(cards, {
         scale: 0.9,
         z: 0,
@@ -134,7 +155,7 @@ const App = () => {
         stagger: { each: 0.06, from: "center" },
       });
 
-      // 2) Move to YOUR positions EXACTLY
+      // 2) Cards spread to YOUR exact positions (--fx/--fy)
       tl.to(
         cards,
         {
@@ -149,10 +170,27 @@ const App = () => {
         "<+=0.02"
       );
 
-      // 3) Hold at those positions for a moment (so you clearly see them)
+      // Optional: keep back cards slightly faded when settled
+      tl.to(
+        screen2.querySelectorAll(".story-card--back"),
+        { opacity: 0.55, duration: 0.2, ease: "none" },
+        "<"
+      );
+
+      // TEXT: when cards reach the final positions, match your original blur look
+      if (bgTextInner) {
+        tl.to(bgTextInner, {
+          opacity: 0.4,
+          filter: "blur(4px)", // ✅ your original blur
+          duration: 0.2,
+          ease: "none",
+        });
+      }
+
+      // 3) Hold briefly at the final layout (so it’s readable-ish but still blurred)
       tl.to({}, { duration: 0.18 });
 
-      // 4) Exit OUT while preserving same directions from your positions
+      // 4) Cards exit OUT following the same direction (based on your fx/fy)
       tl.to(cards, {
         x: (i, el) => getVar(el, "--fx") * 2.2,
         y: (i, el) => getVar(el, "--fy") * 2.2,
@@ -164,20 +202,14 @@ const App = () => {
         stagger: { each: 0.05, from: "center" },
       });
 
-      // 5) Reveal text AFTER exit
+      // 5) TEXT becomes fully clear AFTER cards exit
       if (bgTextInner) {
-        tl.to(
-          bgTextInner,
-          {
-            opacity: 0.4,
-            filter: "blur(4px)",
-            z: 0,
-            scale: 1,
-            duration: 0.3,
-            ease: "power2.out",
-          },
-          "<+=0.08"
-        );
+        tl.to(bgTextInner, {
+          opacity: 1,
+          filter: "blur(0px)", // ✅ crystal clear
+          duration: 0.25,
+          ease: "power1.out",
+        });
       }
 
       carouselTlRef.current = tl;
@@ -242,14 +274,14 @@ const App = () => {
         // ---  Carousel stack -> spread immediately after leaving y=0 ---
         const tl = carouselTlRef.current;
         if (tl) {
-          // start anim immediately after leaving top
-          const start = 0.0005;
-          // finish within the Carousel screen range
-          const end = 1 / n;
+          // start anim immediately after leaving top (works with your forced jump to Carousel)
+          const carouselStart = 0.0005;
+          const carouselEnd = 1 / n; // finish within first "screen" scroll
+
           const local = gsap.utils.clamp(
             0,
             1,
-            (self.progress - start) / (end - start)
+            (self.progress - carouselStart) / (carouselEnd - carouselStart)
           );
 
           tl.progress(local);

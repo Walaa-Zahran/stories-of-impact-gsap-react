@@ -249,32 +249,27 @@ img {
   align-items: center;
   gap: 4.63px;
 
-  opacity: 0;              /* start hidden */
-  filter: blur(16px);
-  transform: translateZ(-120px) scale(0.95);
+  opacity: 0;
+  filter: blur(16px);              /* start blurry */
+  transform: translateZ(-120px) scale(0.55);
+  transform-origin: 50% 50%;  
   transition: none;
+  will-change: transform, opacity, filter;
 }
+
 
 
 /* the actual text styling */
 .carousel__bgLine {
   font-family: "Poppins-Regular", sans-serif;
   font-weight: 400;
-  font-size: 18.53px;
-  line-height: 140%;
+  font-size: 48px;              /*  final size */
+  line-height:1.1;
   letter-spacing: 0px;
   text-align: center;
   margin: 0;
 
-  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-}
-/* Line 1 (h2): white + stroke */
-.carousel__bgTextInner h2.carousel__bgLine {
-  color: #ffffff;
-
-  /* stroke like CSS */
-  -webkit-text-stroke: 1px #000000;
-  text-stroke: 1px #000000;
+  text-shadow: none;
 }
 
 /* Line 2 (p): blue + bold */
