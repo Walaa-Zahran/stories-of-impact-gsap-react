@@ -3,6 +3,13 @@ const Carousel = () => {
     <section className="screen bg-dots" id="screen-2">
       <div className="carousel">
         <div className="carousel__track">
+          {/* centered blurred text behind cards */}
+          <div className="carousel__bgText" aria-hidden="true">
+            <div className="carousel__bgTextInner">
+              <h2 className="carousel__bgLine">THE STORIES. OUR</h2>
+              <p className="carousel__bgLine">PROGRESS.</p>
+            </div>
+          </div>
           {/* back cards (center faded) */}
           <article
             className="story-card story-card--back back-1"
@@ -33,7 +40,7 @@ const Carousel = () => {
               src="assets/images/carousel-1.png"
               alt=""
             />
-            <div className="story-card__overlay">
+            <div className="story-card__overlay" style={{ bottom: "42px" }}>
               <h3 className="story-card__title">From Purpose to Progress</h3>
               <p className="story-card__meta">Empowering Futures</p>
             </div>
