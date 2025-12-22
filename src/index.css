@@ -285,39 +285,42 @@ img {
   left: 50%;
   border-radius: 4px;
   overflow: hidden;
+  /* base center only */
   transform: translate(-50%, -50%);
+
+  /* final offsets live in vars */
+  --fx: 0px;
+  --fy: 0px;
 }
 
-.story-card--secondary.right {
-  transform: translate(-50%, -50%) translateX(clamp(140px, 14vw, 240px))
-    translateY(clamp(10px, 3vh, 40px));
-}
-
-/* Positions  */
+/* Set FINAL positions as variables */
 .story-card--primary {
   z-index: 3;
-  transform: translate(-50%, -50%) translateX(-298px) translateY(40px);
+  --fx: -298px;
+  --fy: 40px;
 }
 
 .story-card--secondary.right {
   z-index: 3;
-  transform: translate(-50%, -50%) translateX(320px) translateY(45px);
+  --fx: 320px;
+  --fy: 45px;
 }
 
-/* Back cards centered behind */
 .story-card--back {
   z-index: 1;
 }
 
 .story-card--back.back-1 {
-  transform: translate(-50%, -50%) translateX(178px) translateY(5px);
+  z-index: 1;
+  --fx: 178px;
+  --fy: 5px;
 }
 
 .story-card--back.back-2 {
   z-index: 2;
-  transform: translate(-50%, -50%) translateX(-130px) translateY(34px);
+  --fx: -130px;
+  --fy: 34px;
 }
-
 /* Image fill */
 .story-card__img {
   width: 100%;

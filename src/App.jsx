@@ -6,11 +6,11 @@ import ScrollTrigger from "gsap/ScrollTrigger";
 
 import Carousel from "./sections/Carousel";
 import Photos from "./sections/Photos";
-// import Headline from "./sections/Headline";
-// import Title from "./sections/Title";
-// import KeyFigures from "./sections/KeyFigures";
-// import CTA from "./sections/CTA";
-// import Quotes from "./sections/Quotes";
+import Headline from "./sections/Headline";
+import Title from "./sections/Title";
+import KeyFigures from "./sections/KeyFigures";
+import CTA from "./sections/CTA";
+import Quotes from "./sections/Quotes";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -114,6 +114,55 @@ const App = () => {
         setActive(i);
       },
     });
+    // --- Carousel stack -> spread animation (Screen 2 only) ---
+    const setupCarouselMotion = () => {
+      const screen2 = document.querySelector("#screen-2");
+      if (!screen2) return;
+
+      const cards = screen2.querySelectorAll(".story-card");
+      if (!cards.length) return;
+
+      const getVar = (el, name) =>
+        parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
+
+      // Start stacked in center
+      gsap.set(cards, {
+        x: 0,
+        y: 0,
+        scale: 0.96,
+        opacity: 1,
+        transformOrigin: "50% 50%",
+      });
+
+      // Scrub ONLY during screen-2 scroll segment
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: spacer,
+          start: () => `top top-=${window.innerHeight * 1}`, // screen index 1
+          end: () => `top top-=${window.innerHeight * 2}`, // screen index 2 end
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      // Step-by-step feel (stagger) + spread to final offsets
+      tl.to(
+        cards,
+        {
+          x: (i, el) => getVar(el, "--fx"),
+          y: (i, el) => getVar(el, "--fy"),
+          scale: 1,
+          ease: "none",
+          stagger: 0.12, // tweak for “step” feel
+        },
+        0
+      );
+
+      // Optional: make back cards fade a bit as they go back
+      tl.to(".story-card--back", { opacity: 0.55, ease: "none" }, 0);
+    };
+
+    setupCarouselMotion();
 
     const onResize = () => ScrollTrigger.refresh();
     window.addEventListener("resize", onResize);
@@ -183,11 +232,11 @@ const App = () => {
       <Carousel />
 
       {/* Add more screens later */}
-      {/* <KeyFigures />
+      <KeyFigures />
       <Headline />
       <Title />
       <Quotes />
-      <CTA /> */}
+      <CTA />
 
       <div className="scroll-spacer" />
     </main>
