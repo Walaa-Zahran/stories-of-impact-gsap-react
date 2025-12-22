@@ -21,7 +21,7 @@ const App = () => {
   // used to prevent multiple replays while sitting at y=0
   const replayStateRef = useRef({ isReplaying: false });
 
-  // ✅ holds Carousel timeline so it’s accessible from onUpdate
+  //  holds Carousel timeline so it’s accessible from onUpdate
   const carouselTlRef = useRef(null);
 
   const initScrollExperience = () => {
@@ -73,44 +73,114 @@ const App = () => {
       progressFill.style.setProperty("--p", `${percent}%`);
     };
     // -------------------------------------------------------------------
-
-    // ✅ setup carousel motion FIRST so tl exists
     const setupCarouselMotion = () => {
       const screen2 = document.querySelector("#screen-2");
       if (!screen2) return;
 
+      const track = screen2.querySelector(".carousel__track");
       const cards = screen2.querySelectorAll(".story-card");
+      const bgTextInner = screen2.querySelector(".carousel__bgTextInner");
       if (!cards.length) return;
 
       const getVar = (el, name) =>
         parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
 
+      gsap.set(track, {
+        transformPerspective: 1100,
+        transformStyle: "preserve-3d",
+      });
+
+      // Start stacked, tiny, center (BUT visible quickly)
       gsap.set(cards, {
         x: 0,
         y: 0,
-        scale: 0.96,
-        opacity: 1,
+        z: -180,
+        scale: 0.12, // not too tiny (so you see them immediately)
+        opacity: 0,
+        rotateX: 10,
+        rotateY: -8,
         transformOrigin: "50% 50%",
+        filter: "blur(4px)",
       });
+
+      if (bgTextInner) {
+        gsap.set(bgTextInner, {
+          opacity: 0,
+          filter: "blur(16px)",
+          z: -120,
+          scale: 0.95,
+        });
+      }
 
       const tl = gsap.timeline({ paused: true });
 
+      // 0) Appear immediately (small wave)
+      tl.to(cards, {
+        opacity: 1,
+        filter: "blur(0px)",
+        duration: 0.12,
+        ease: "none",
+        stagger: { each: 0.03, from: "center" },
+      });
+
+      // 1) Grow in place (still centered)
+      tl.to(cards, {
+        scale: 0.9,
+        z: 0,
+        rotateX: 0,
+        rotateY: 0,
+        duration: 0.28,
+        ease: "power2.out",
+        stagger: { each: 0.06, from: "center" },
+      });
+
+      // 2) Move to YOUR positions EXACTLY
       tl.to(
         cards,
         {
           x: (i, el) => getVar(el, "--fx"),
           y: (i, el) => getVar(el, "--fy"),
           scale: 1,
-          ease: "none",
-          stagger: 0.12,
+          z: 35,
+          duration: 0.38,
+          ease: "power1.out",
+          stagger: { each: 0.06, from: "center" },
         },
-        0
-      ).to(".story-card--back", { opacity: 0.55, ease: "none" }, 0);
+        "<+=0.02"
+      );
 
-      // store timeline globally
+      // 3) Hold at those positions for a moment (so you clearly see them)
+      tl.to({}, { duration: 0.18 });
+
+      // 4) Exit OUT while preserving same directions from your positions
+      tl.to(cards, {
+        x: (i, el) => getVar(el, "--fx") * 2.2,
+        y: (i, el) => getVar(el, "--fy") * 2.2,
+        z: 720,
+        scale: 3.2,
+        opacity: 0,
+        duration: 0.55,
+        ease: "power2.in",
+        stagger: { each: 0.05, from: "center" },
+      });
+
+      // 5) Reveal text AFTER exit
+      if (bgTextInner) {
+        tl.to(
+          bgTextInner,
+          {
+            opacity: 0.4,
+            filter: "blur(4px)",
+            z: 0,
+            scale: 1,
+            duration: 0.3,
+            ease: "power2.out",
+          },
+          "<+=0.08"
+        );
+      }
+
       carouselTlRef.current = tl;
-
-      // start stacked
       tl.progress(0);
     };
 
@@ -169,20 +239,17 @@ const App = () => {
           setActive(i);
         }
 
-        // --- ✅ Carousel stack -> spread immediately after leaving y=0 ---
+        // ---  Carousel stack -> spread immediately after leaving y=0 ---
         const tl = carouselTlRef.current;
         if (tl) {
-          // start anim as soon as we begin scrolling (same threshold you used to jump to Carousel)
-          const carouselStart = 0.0005;
-
-          // finish the carousel spread within the first "screen" worth of scroll
-          // (you can make it faster/slower by changing this)
-          const carouselEnd = 1 / n;
-
+          // start anim immediately after leaving top
+          const start = 0.0005;
+          // finish within the Carousel screen range
+          const end = 1 / n;
           const local = gsap.utils.clamp(
             0,
             1,
-            (self.progress - carouselStart) / (carouselEnd - carouselStart)
+            (self.progress - start) / (end - start)
           );
 
           tl.progress(local);

@@ -220,9 +220,19 @@ img {
   width: 100%;
   height: 560px;
   max-height: 70vh;
-  /*keeps blurred text from spilling outside*/
-  overflow: hidden;
+  overflow: visible;
+
+  /*  3D depth */
+  perspective: 900px;
+  transform-style: preserve-3d;
 }
+
+.story-card {
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+}
+
+
 /* centered container behind cards */
 .carousel__bgText {
   position: absolute;
@@ -233,18 +243,18 @@ img {
   pointer-events: none;
 }
 
-/* auto-layout equivalent: vertical stack, centered, gap 4.63 */
 .carousel__bgTextInner {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4.63px;
-  padding: 0;
 
-  
-  opacity: 0.4;
-  filter: blur(4px);
+  opacity: 0;              /* start hidden */
+  filter: blur(16px);
+  transform: translateZ(-120px) scale(0.95);
+  transition: none;
 }
+
 
 /* the actual text styling */
 .carousel__bgLine {
@@ -285,12 +295,15 @@ img {
   left: 50%;
   border-radius: 4px;
   overflow: hidden;
-  /* base center only */
+
+  /* keep base center anchor */
   transform: translate(-50%, -50%);
 
-  /* final offsets live in vars */
   --fx: 0px;
   --fy: 0px;
+
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
 }
 
 /* Set FINAL positions as variables */
