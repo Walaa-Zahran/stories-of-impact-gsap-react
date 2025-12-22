@@ -1,6 +1,6 @@
 const CTA = () => {
   return (
-    <section className="screen" id="screen-7">
+    <section className="screen" id="screen-5">
       <div className="center-block">
         <h2 className="title">
           <span className="title--thin">JOIN THE VISION.</span>

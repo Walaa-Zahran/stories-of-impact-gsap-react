@@ -4,13 +4,11 @@ import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import SplitText from "gsap/SplitText";
 
-import Carousel from "./sections/Carousel";
 import Photos from "./sections/Photos";
-import Headline from "./sections/Headline";
-import Title from "./sections/Title";
+import Carousel from "./sections/Carousel";
+import Quotes from "./sections/Quotes";
 import KeyFigures from "./sections/KeyFigures";
 import CTA from "./sections/CTA";
-import Quotes from "./sections/Quotes";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -441,10 +439,8 @@ const App = () => {
       <Photos ref={photosRef} onIntroDone={handleIntroDone} />
       <Carousel />
 
-      <KeyFigures />
-      <Headline />
-      <Title />
       <Quotes />
+      <KeyFigures />
       <CTA />
 
       <div className="scroll-spacer" />

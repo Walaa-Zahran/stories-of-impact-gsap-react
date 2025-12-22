@@ -82,7 +82,7 @@ img {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.12s ease; 
+  transition: opacity 0.12s ease;
 }
 
 .screen.is-active {
@@ -128,7 +128,7 @@ img {
 }
 
 .title--thin {
-  font-size: 64px;
+  font-size: 48px;
   line-height: 140%;
   font-weight: 400;
   color: #000;
@@ -139,7 +139,7 @@ img {
   font-family: "Poppins-Bold", sans-serif;
   font-weight: 700;
   line-height: 140%;
-  font-size: 64px;
+  font-size: 48px;
 }
 
 .subtitle {
@@ -149,17 +149,6 @@ img {
   font-size: var(--type-size-b1, 16px);
   line-height: 150%;
   font-weight: 400;
-}
-
-.line-mask {
-  display: block;
-  overflow: hidden;
-  text-align: center;
-}
-
-.split-line {
-  display: block;
-  will-change: transform, opacity, filter;
 }
 
 /* -----------------------------
@@ -227,9 +216,6 @@ img {
   transform-style: preserve-3d;
 }
 
-
-
-
 /* centered container behind cards */
 .carousel__bgText {
   position: absolute;
@@ -247,21 +233,19 @@ img {
   gap: 4.63px;
 
   opacity: 0;
-  filter: blur(16px);              /* start blurry */
+  filter: blur(16px); /* start blurry */
   transform: translateZ(-120px) scale(0.55);
-  transform-origin: 50% 50%;  
+  transform-origin: 50% 50%;
   transition: none;
   will-change: transform, opacity, filter;
 }
-
-
 
 /* the actual text styling */
 .carousel__bgLine {
   font-family: "Poppins-Regular", sans-serif;
   font-weight: 400;
-  font-size: 48px;             
-  line-height:1.1;
+  font-size: 48px;
+  line-height: 1.1;
   letter-spacing: 0px;
   text-align: center;
   margin: 0;
@@ -276,7 +260,7 @@ img {
   font-size: 16px;
   line-height: 1.6;
 
-  opacity: 0; 
+  opacity: 0;
 }
 
 /* Line 2 (p): blue + bold */
@@ -469,8 +453,8 @@ img {
 .screen.show-final-text .impact__center {
   z-index: 999;
   position: relative;
-  opacity: 1;  visibility: visible;
-
+  opacity: 1;
+  visibility: visible;
 }
 
 .impact__img--tl {
@@ -533,9 +517,17 @@ img {
   --fx: -302px;
   --fy: -500.5px;
 }
-
 /* -----------------------------
-   Key figures (Screen 5)
+   Quote (Screen 3)
+------------------------------ */
+#screen-3 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+}
+/* -----------------------------
+   Key figures (Screen 4)
 ------------------------------ */
 .figures {
   width: var(--container);
@@ -606,19 +598,15 @@ img {
 }
 
 /* -----------------------------
-   Quote (Screen 6)
+   CTA buttons (Screen 5)
 ------------------------------ */
-.quote {
-  margin: 0;
-  font-size: clamp(18px, 2.2vw, 28px);
-  color: rgba(20, 30, 50, 0.85);
-  line-height: 1.55;
-  text-align: center;
+#screen-5 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
 }
-
-/* -----------------------------
-   CTA buttons (Screen 7)
------------------------------- */
 .cta {
   margin-top: 22px;
   display: flex;
@@ -642,15 +630,21 @@ img {
 
 .btn--outline {
   color: #111;
-  border: 1.5px solid rgba(20, 30, 50, 0.35);
+  border: 1px solid #153c70;
   background: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+  line-height: 150%;
+  letter-spacing: 0.6px;
 }
 
 .btn--solid {
   color: #fff;
-  background: #123c78;
-  border: 1.5px solid rgba(18, 60, 120, 0.35);
+  background: #153c70;
+  border: 1px solid #153c70;
   box-shadow: 0 12px 26px rgba(18, 60, 120, 0.18);
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  line-height: 150%;
 }
 
 /* -----------------------------

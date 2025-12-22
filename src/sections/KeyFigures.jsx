@@ -1,6 +1,6 @@
 const KeyFigures = () => {
   return (
-    <section className="screen" id="screen-5">
+    <section className="screen" id="screen-4">
       <div className="figures">
         <div className="figures__rail">
           <article className="figure-card figure-card--active">
