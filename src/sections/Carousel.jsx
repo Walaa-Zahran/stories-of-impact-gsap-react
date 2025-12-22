@@ -8,6 +8,10 @@ const Carousel = () => {
             <div className="carousel__bgTextInner">
               <h2 className="carousel__bgLine">THE STORIES. OUR</h2>
               <p className="carousel__bgLine">PROGRESS.</p>
+              <p className="carousel_paragraph">
+                These are just some of the faces behind Our VISION. Together,
+                we’re delivering real impact reflected in the numbers.
+              </p>
             </div>
           </div>
           {/* back cards (center faded) */}

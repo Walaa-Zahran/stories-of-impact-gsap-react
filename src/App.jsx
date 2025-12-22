@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-
+import SplitText from "gsap/SplitText";
 import Carousel from "./sections/Carousel";
 import Photos from "./sections/Photos";
 import Headline from "./sections/Headline";
@@ -11,7 +11,7 @@ import KeyFigures from "./sections/KeyFigures";
 import CTA from "./sections/CTA";
 import Quotes from "./sections/Quotes";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const App = () => {
   const scrollInitRef = useRef(false);
@@ -23,6 +23,7 @@ const App = () => {
 
   //  holds Carousel timeline so it’s accessible from onUpdate
   const carouselTlRef = useRef(null);
+  const paraSplitRef = useRef(null);
 
   const initScrollExperience = () => {
     if (scrollInitRef.current) return;
@@ -56,7 +57,7 @@ const App = () => {
     const startIndex = 1; // 0 = Photos, 1 = Carousel
 
     const MIN_PROGRESS = 12; // initial fill when progress appears
-    const CAROUSEL_TARGET = 50; // ✅ must reach 50% by end of Carousel
+    const CAROUSEL_TARGET = 50; //  must reach 50% by end of Carousel
 
     const updateProgress = (activeIndex, localWithinScreen) => {
       if (!progressEl || !progressFill) return;
@@ -72,7 +73,7 @@ const App = () => {
       // total steps AFTER carousel (KeyFigures..CTA)
       const stepsAfterCarousel = Math.max(1, n - 1 - startIndex);
 
-      // ✅ If we are on Carousel, fill smoothly up to 50%
+      //  If we are on Carousel, fill smoothly up to 50%
       if (activeIndex === startIndex) {
         const t = typeof localWithinScreen === "number" ? localWithinScreen : 0;
         const pct = MIN_PROGRESS + (CAROUSEL_TARGET - MIN_PROGRESS) * t; // MIN -> 50
@@ -80,7 +81,7 @@ const App = () => {
         return;
       }
 
-      // ✅ After Carousel: fill from 50% -> 100% step-by-step
+      //  After Carousel: fill from 50% -> 100% step-by-step
       const stepIndex = Math.min(
         stepsAfterCarousel,
         Math.max(1, activeIndex - startIndex) // 1 for first screen after carousel
@@ -220,6 +221,42 @@ const App = () => {
           ease: "power1.out",
         });
       }
+      let paraSplit; // for cleanup
+
+      if (bgTextInner) {
+        const para = bgTextInner.querySelector(".carousel_paragraph");
+
+        if (para) {
+          paraSplitRef.current?.revert?.();
+          paraSplitRef.current = null;
+          tl.set(para, { opacity: 1 });
+
+          // Split into lines
+          paraSplit = new SplitText(para, {
+            type: "lines",
+            linesClass: "carousel-line",
+          });
+
+          // initial line state
+          gsap.set(paraSplit.lines, {
+            yPercent: 120,
+            opacity: 0,
+          });
+
+          // animate lines in
+          tl.to(
+            paraSplit.lines,
+            {
+              yPercent: 0,
+              opacity: 1,
+              duration: 0.6,
+              ease: "power3.out",
+              stagger: 0.12,
+            },
+            ">+=0.05"
+          );
+        }
+      }
 
       carouselTlRef.current = tl;
       tl.progress(0);
@@ -315,6 +352,9 @@ const App = () => {
 
       carouselTlRef.current?.kill();
       carouselTlRef.current = null;
+
+      paraSplitRef.current?.revert?.();
+      paraSplitRef.current = null;
     };
   };
 
