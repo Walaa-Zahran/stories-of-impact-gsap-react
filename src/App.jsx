@@ -55,7 +55,10 @@ const App = () => {
     const progressFill = document.getElementById("globalProgressFill");
     const startIndex = 1; // 0 = Photos, 1 = Carousel
 
-    const updateProgress = (activeIndex) => {
+    const MIN_PROGRESS = 12; // initial fill when progress appears
+    const CAROUSEL_TARGET = 50; // ✅ must reach 50% by end of Carousel
+
+    const updateProgress = (activeIndex, localWithinScreen) => {
       if (!progressEl || !progressFill) return;
 
       if (activeIndex < startIndex) {
@@ -66,15 +69,28 @@ const App = () => {
 
       progressEl.classList.add("is-visible");
 
-      const steps = Math.max(1, n - 1 - startIndex);
-      const stepIndex = Math.min(steps, Math.max(0, activeIndex - startIndex));
-      const percent = (stepIndex / steps) * 100;
+      // total steps AFTER carousel (KeyFigures..CTA)
+      const stepsAfterCarousel = Math.max(1, n - 1 - startIndex);
 
-      progressFill.style.setProperty("--p", `${percent}%`);
+      // ✅ If we are on Carousel, fill smoothly up to 50%
+      if (activeIndex === startIndex) {
+        const t = typeof localWithinScreen === "number" ? localWithinScreen : 0;
+        const pct = MIN_PROGRESS + (CAROUSEL_TARGET - MIN_PROGRESS) * t; // MIN -> 50
+        progressFill.style.setProperty("--p", `${pct}%`);
+        return;
+      }
+
+      // ✅ After Carousel: fill from 50% -> 100% step-by-step
+      const stepIndex = Math.min(
+        stepsAfterCarousel,
+        Math.max(1, activeIndex - startIndex) // 1 for first screen after carousel
+      );
+
+      const pct =
+        CAROUSEL_TARGET +
+        (stepIndex / stepsAfterCarousel) * (100 - CAROUSEL_TARGET);
+      progressFill.style.setProperty("--p", `${pct}%`);
     };
-    // -------------------------------------------------------------------
-    // ✅ FULL UPDATED setupCarouselMotion()
-    // Drop this inside initScrollExperience() and replace your current setupCarouselMotion()
 
     const setupCarouselMotion = () => {
       const screen2 = document.querySelector("#screen-2");
@@ -119,7 +135,6 @@ const App = () => {
 
       const tl = gsap.timeline({ paused: true });
 
-      // 0) Cards appear fast
       tl.to(cards, {
         opacity: 1,
         filter: "blur(0px)",
@@ -144,7 +159,6 @@ const App = () => {
         );
       }
 
-      // 1) Cards grow in place (still centered)
       tl.to(cards, {
         scale: 0.9,
         z: 0,
@@ -155,7 +169,6 @@ const App = () => {
         stagger: { each: 0.06, from: "center" },
       });
 
-      // 2) Cards spread to YOUR exact positions (--fx/--fy)
       tl.to(
         cards,
         {
@@ -170,27 +183,23 @@ const App = () => {
         "<+=0.02"
       );
 
-      // Optional: keep back cards slightly faded when settled
       tl.to(
         screen2.querySelectorAll(".story-card--back"),
         { opacity: 0.55, duration: 0.2, ease: "none" },
         "<"
       );
 
-      // TEXT: when cards reach the final positions, match your original blur look
       if (bgTextInner) {
         tl.to(bgTextInner, {
           opacity: 0.4,
-          filter: "blur(4px)", // ✅ your original blur
+          filter: "blur(4px)",
           duration: 0.2,
           ease: "none",
         });
       }
 
-      // 3) Hold briefly at the final layout (so it’s readable-ish but still blurred)
       tl.to({}, { duration: 0.18 });
 
-      // 4) Cards exit OUT following the same direction (based on your fx/fy)
       tl.to(cards, {
         x: (i, el) => getVar(el, "--fx") * 2.2,
         y: (i, el) => getVar(el, "--fy") * 2.2,
@@ -206,7 +215,7 @@ const App = () => {
       if (bgTextInner) {
         tl.to(bgTextInner, {
           opacity: 1,
-          filter: "blur(0px)", // ✅ crystal clear
+          filter: "blur(0px)", //  crystal clear
           duration: 0.25,
           ease: "power1.out",
         });
@@ -257,6 +266,7 @@ const App = () => {
         // Force: once user scrolls even a tiny bit, go to Carousel
         if (i === 0 && self.progress > 0.0005) {
           setActive(1);
+          updateProgress(1);
         } else {
           const exit = parseFloat(screens[i].dataset.exit || "0.99");
           if (i < n - 1 && localScreen >= exit) {
@@ -274,7 +284,7 @@ const App = () => {
         // ---  Carousel stack -> spread immediately after leaving y=0 ---
         const tl = carouselTlRef.current;
         if (tl) {
-          // start anim immediately after leaving top (works with your forced jump to Carousel)
+          // start anim immediately after leaving top
           const carouselStart = 0.0005;
           const carouselEnd = 1 / n; // finish within first "screen" scroll
 
@@ -285,6 +295,10 @@ const App = () => {
           );
 
           tl.progress(local);
+          updateProgress(1, local);
+          if (active !== 1) {
+            updateProgress(active);
+          }
         }
       },
     });
