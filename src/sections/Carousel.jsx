@@ -1,4 +1,3 @@
-// Carousel.jsx (FULL UPDATED)
 const Carousel = () => {
   return (
     <section className="screen bg-dots" id="screen-2" data-back="0">

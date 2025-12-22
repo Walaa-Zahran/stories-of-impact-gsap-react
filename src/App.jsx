@@ -1,14 +1,8 @@
-// App.jsx (FULL UPDATED)
-// ✅ Includes: Carousel 3D wave + spread to your --fx/--fy + exit,
-// ✅ bg text: blurry while cards settle, then clear, then paragraph line-by-line (SplitText),
-// ✅ then OUTRO: text+paragraph shrink/blurry/fade out, then next screen appears,
-// ✅ progress bar: starts non-empty, fills to 50% by end of Carousel, then 50→100 across next screens.
-
 import { useLayoutEffect, useRef } from "react";
 
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import SplitText from "gsap/SplitText"; // ⚠️ Club GSAP plugin (import path may differ in your setup)
+import SplitText from "gsap/SplitText";
 
 import Carousel from "./sections/Carousel";
 import Photos from "./sections/Photos";
@@ -188,7 +182,7 @@ const App = () => {
         stagger: { each: 0.06, from: "center" },
       });
 
-      // 2) Cards spread to your exact positions (--fx/--fy)
+      // 2) Cards spread to exact positions (--fx/--fy)
       tl.to(
         cards,
         {
@@ -210,7 +204,7 @@ const App = () => {
         "<"
       );
 
-      // When cards reach final positions: match your original blur look
+      // When cards reach final position
       if (bgTextInner) {
         tl.to(bgTextInner, {
           opacity: 0.4,
@@ -357,7 +351,7 @@ const App = () => {
         const tl = carouselTlRef.current;
         if (tl) {
           const carouselStart = 0.0005; // right after leaving top
-          const carouselEnd = 2 / n; // ✅ extend until next screen threshold
+          const carouselEnd = 2 / n;
 
           const local = gsap.utils.clamp(
             0,
@@ -367,11 +361,9 @@ const App = () => {
 
           tl.progress(local);
 
-          // ✅ progress bar fills to 50% by end of Carousel
           updateProgress(1, local);
         }
 
-        // ✅ For other screens, keep step progress
         if (active !== 1) updateProgress(active);
       },
     });
