@@ -1,20 +1,21 @@
+// Carousel.jsx (FULL UPDATED)
 const Carousel = () => {
   return (
     <section className="screen bg-dots" id="screen-2" data-back="0">
       <div className="carousel">
         <div className="carousel__track">
-          {/* centered blurred text behind cards */}
           <div className="carousel__bgText" aria-hidden="true">
             <div className="carousel__bgTextInner">
               <h2 className="carousel__bgLine">THE STORIES. OUR</h2>
               <p className="carousel__bgLine">PROGRESS.</p>
+
               <p className="carousel_paragraph">
                 These are just some of the faces behind Our VISION. Together,
                 we’re delivering real impact reflected in the numbers.
               </p>
             </div>
           </div>
-          {/* back cards (center faded) */}
+
           <article
             className="story-card story-card--back back-1"
             aria-hidden="true"
@@ -37,7 +38,6 @@ const Carousel = () => {
             />
           </article>
 
-          {/* main left card */}
           <article className="story-card story-card--primary">
             <img
               className="story-card__img"
@@ -50,7 +50,6 @@ const Carousel = () => {
             </div>
           </article>
 
-          {/* right card */}
           <article className="story-card story-card--secondary right">
             <img
               className="story-card__img"

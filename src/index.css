@@ -227,10 +227,7 @@ img {
   transform-style: preserve-3d;
 }
 
-.story-card {
-  transform-style: preserve-3d;
-  will-change: transform, opacity, filter;
-}
+
 
 
 /* centered container behind cards */
@@ -263,7 +260,7 @@ img {
 .carousel__bgLine {
   font-family: "Poppins-Regular", sans-serif;
   font-weight: 400;
-  font-size: 48px;              /*  final size */
+  font-size: 48px;             
   line-height:1.1;
   letter-spacing: 0px;
   text-align: center;
@@ -279,7 +276,7 @@ img {
   font-size: 16px;
   line-height: 1.6;
 
-  opacity: 0; /* GSAP will reveal */
+  opacity: 0; 
 }
 
 /* Line 2 (p): blue + bold */

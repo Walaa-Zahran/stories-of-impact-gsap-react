@@ -1,8 +1,15 @@
+// App.jsx (FULL UPDATED)
+// ✅ Includes: Carousel 3D wave + spread to your --fx/--fy + exit,
+// ✅ bg text: blurry while cards settle, then clear, then paragraph line-by-line (SplitText),
+// ✅ then OUTRO: text+paragraph shrink/blurry/fade out, then next screen appears,
+// ✅ progress bar: starts non-empty, fills to 50% by end of Carousel, then 50→100 across next screens.
+
 import { useLayoutEffect, useRef } from "react";
 
 import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
-import SplitText from "gsap/SplitText";
+import SplitText from "gsap/SplitText"; // ⚠️ Club GSAP plugin (import path may differ in your setup)
+
 import Carousel from "./sections/Carousel";
 import Photos from "./sections/Photos";
 import Headline from "./sections/Headline";
@@ -21,8 +28,10 @@ const App = () => {
   // used to prevent multiple replays while sitting at y=0
   const replayStateRef = useRef({ isReplaying: false });
 
-  //  holds Carousel timeline so it’s accessible from onUpdate
+  // holds Carousel timeline so it’s accessible from onUpdate
   const carouselTlRef = useRef(null);
+
+  // holds SplitText instance so it can be reverted on cleanup
   const paraSplitRef = useRef(null);
 
   const initScrollExperience = () => {
@@ -56,9 +65,10 @@ const App = () => {
     const progressFill = document.getElementById("globalProgressFill");
     const startIndex = 1; // 0 = Photos, 1 = Carousel
 
-    const MIN_PROGRESS = 12; // initial fill when progress appears
-    const CAROUSEL_TARGET = 50; //  must reach 50% by end of Carousel
+    const MIN_PROGRESS = 12; // not empty at start
+    const CAROUSEL_TARGET = 50; // reach 50% by end of Carousel timeline
 
+    // localWithinScreen is used only for Carousel smooth fill
     const updateProgress = (activeIndex, localWithinScreen) => {
       if (!progressEl || !progressFill) return;
 
@@ -70,28 +80,30 @@ const App = () => {
 
       progressEl.classList.add("is-visible");
 
-      // total steps AFTER carousel (KeyFigures..CTA)
+      // screens AFTER carousel
       const stepsAfterCarousel = Math.max(1, n - 1 - startIndex);
 
-      //  If we are on Carousel, fill smoothly up to 50%
+      // Carousel: MIN -> 50 smoothly
       if (activeIndex === startIndex) {
         const t = typeof localWithinScreen === "number" ? localWithinScreen : 0;
-        const pct = MIN_PROGRESS + (CAROUSEL_TARGET - MIN_PROGRESS) * t; // MIN -> 50
+        const pct = MIN_PROGRESS + (CAROUSEL_TARGET - MIN_PROGRESS) * t;
         progressFill.style.setProperty("--p", `${pct}%`);
         return;
       }
 
-      //  After Carousel: fill from 50% -> 100% step-by-step
+      // After Carousel: 50 -> 100 step-by-step
       const stepIndex = Math.min(
         stepsAfterCarousel,
-        Math.max(1, activeIndex - startIndex) // 1 for first screen after carousel
+        Math.max(1, activeIndex - startIndex)
       );
 
       const pct =
         CAROUSEL_TARGET +
         (stepIndex / stepsAfterCarousel) * (100 - CAROUSEL_TARGET);
+
       progressFill.style.setProperty("--p", `${pct}%`);
     };
+    // -------------------------------------------------------------------
 
     const setupCarouselMotion = () => {
       const screen2 = document.querySelector("#screen-2");
@@ -111,7 +123,7 @@ const App = () => {
         transformStyle: "preserve-3d",
       });
 
-      // ---- Cards start: tiny at center, stacked ----
+      // Cards start: tiny at center, stacked
       gsap.set(cards, {
         x: 0,
         y: 0,
@@ -124,7 +136,7 @@ const App = () => {
         filter: "blur(4px)",
       });
 
-      // ---- Text start: hidden + more blur ----
+      // Text start: hidden + more blur
       if (bgTextInner) {
         gsap.set(bgTextInner, {
           opacity: 0,
@@ -132,10 +144,15 @@ const App = () => {
           z: -120,
           filter: "blur(16px)",
         });
+
+        // IMPORTANT: if a split existed from before, revert it
+        paraSplitRef.current?.revert?.();
+        paraSplitRef.current = null;
       }
 
       const tl = gsap.timeline({ paused: true });
 
+      // 0) Cards appear fast
       tl.to(cards, {
         opacity: 1,
         filter: "blur(0px)",
@@ -144,7 +161,7 @@ const App = () => {
         stagger: { each: 0.03, from: "center" },
       });
 
-      // TEXT: starts showing while cards begin (still blurry)
+      // Text starts showing while cards begin (still blurry)
       if (bgTextInner) {
         tl.to(
           bgTextInner,
@@ -152,14 +169,15 @@ const App = () => {
             opacity: 0.4,
             scale: 1,
             z: 0,
-            filter: "blur(8px)", // still blurry while the wave/spread starts
+            filter: "blur(8px)",
             duration: 0.55,
             ease: "power2.out",
           },
-          0 // start at timeline beginning
+          0
         );
       }
 
+      // 1) Cards grow in place (still centered)
       tl.to(cards, {
         scale: 0.9,
         z: 0,
@@ -170,6 +188,7 @@ const App = () => {
         stagger: { each: 0.06, from: "center" },
       });
 
+      // 2) Cards spread to your exact positions (--fx/--fy)
       tl.to(
         cards,
         {
@@ -184,12 +203,14 @@ const App = () => {
         "<+=0.02"
       );
 
+      // Keep back cards slightly faded when settled
       tl.to(
         screen2.querySelectorAll(".story-card--back"),
         { opacity: 0.55, duration: 0.2, ease: "none" },
         "<"
       );
 
+      // When cards reach final positions: match your original blur look
       if (bgTextInner) {
         tl.to(bgTextInner, {
           opacity: 0.4,
@@ -199,8 +220,10 @@ const App = () => {
         });
       }
 
+      // Hold briefly at final layout
       tl.to({}, { duration: 0.18 });
 
+      // 4) Cards exit out following same direction (based on fx/fy)
       tl.to(cards, {
         x: (i, el) => getVar(el, "--fx") * 2.2,
         y: (i, el) => getVar(el, "--fy") * 2.2,
@@ -212,40 +235,31 @@ const App = () => {
         stagger: { each: 0.05, from: "center" },
       });
 
-      // 5) TEXT becomes fully clear AFTER cards exit
+      // 5) Text becomes fully clear AFTER cards exit
       if (bgTextInner) {
         tl.to(bgTextInner, {
           opacity: 1,
-          filter: "blur(0px)", //  crystal clear
+          filter: "blur(0px)",
           duration: 0.25,
           ease: "power1.out",
         });
-      }
-      let paraSplit; // for cleanup
 
-      if (bgTextInner) {
+        // 6) Paragraph line-by-line (SplitText) AFTER text is clear
         const para = bgTextInner.querySelector(".carousel_paragraph");
-
         if (para) {
-          paraSplitRef.current?.revert?.();
-          paraSplitRef.current = null;
           tl.set(para, { opacity: 1 });
 
-          // Split into lines
-          paraSplit = new SplitText(para, {
+          const split = new SplitText(para, {
             type: "lines",
             linesClass: "carousel-line",
           });
+          paraSplitRef.current = split;
 
-          // initial line state
-          gsap.set(paraSplit.lines, {
-            yPercent: 120,
-            opacity: 0,
-          });
+          gsap.set(split.lines, { yPercent: 120, opacity: 0 });
 
-          // animate lines in
+          // reveal lines
           tl.to(
-            paraSplit.lines,
+            split.lines,
             {
               yPercent: 0,
               opacity: 1,
@@ -254,6 +268,34 @@ const App = () => {
               stagger: 0.12,
             },
             ">+=0.05"
+          );
+
+          // OUTRO: keep scrolling -> paragraph + text go back (small+blurry) then disappear
+          tl.to({}, { duration: 0.12 });
+
+          tl.to(
+            split.lines,
+            {
+              yPercent: 120,
+              opacity: 0,
+              duration: 0.45,
+              ease: "power2.in",
+              stagger: 0.06,
+            },
+            "<"
+          );
+
+          tl.to(
+            bgTextInner,
+            {
+              scale: 0.55,
+              z: -120,
+              opacity: 0,
+              filter: "blur(16px)",
+              duration: 0.45,
+              ease: "power2.in",
+            },
+            "<"
           );
         }
       }
@@ -278,8 +320,6 @@ const App = () => {
       if (next !== 0) {
         screens[0].classList.remove("show-final-text");
         screens[0].classList.remove("show-scroll-hint");
-        // keep or remove based on preference:
-        // screens[0].classList.remove("images-hidden");
       }
 
       active = next;
@@ -293,7 +333,7 @@ const App = () => {
       end: () => `+=${window.innerHeight * n}`,
       scrub: true,
       onUpdate: (self) => {
-        // --- screen switching logic (same as before) ---
+        // --- screen switching logic ---
         const raw = self.progress * n;
         let i = Math.floor(raw);
         i = Math.max(0, Math.min(n - 1, i));
@@ -303,27 +343,21 @@ const App = () => {
         // Force: once user scrolls even a tiny bit, go to Carousel
         if (i === 0 && self.progress > 0.0005) {
           setActive(1);
-          updateProgress(1);
         } else {
           const exit = parseFloat(screens[i].dataset.exit || "0.99");
-          if (i < n - 1 && localScreen >= exit) {
-            setActive(i + 1);
-          }
+          if (i < n - 1 && localScreen >= exit) setActive(i + 1);
 
           const back = parseFloat(screens[i].dataset.back || "0.10");
-          if (i > 0 && localScreen <= back) {
-            setActive(i - 1);
-          }
+          if (i > 0 && localScreen <= back) setActive(i - 1);
 
           setActive(i);
         }
 
-        // ---  Carousel stack -> spread immediately after leaving y=0 ---
+        // --- Carousel timeline mapping (give it enough scroll time for paragraph + outro) ---
         const tl = carouselTlRef.current;
         if (tl) {
-          // start anim immediately after leaving top
-          const carouselStart = 0.0005;
-          const carouselEnd = 1 / n; // finish within first "screen" scroll
+          const carouselStart = 0.0005; // right after leaving top
+          const carouselEnd = 2 / n; // ✅ extend until next screen threshold
 
           const local = gsap.utils.clamp(
             0,
@@ -332,11 +366,13 @@ const App = () => {
           );
 
           tl.progress(local);
+
+          // ✅ progress bar fills to 50% by end of Carousel
           updateProgress(1, local);
-          if (active !== 1) {
-            updateProgress(active);
-          }
         }
+
+        // ✅ For other screens, keep step progress
+        if (active !== 1) updateProgress(active);
       },
     });
 
@@ -413,7 +449,6 @@ const App = () => {
       <Photos ref={photosRef} onIntroDone={handleIntroDone} />
       <Carousel />
 
-      {/* Add more screens later */}
       <KeyFigures />
       <Headline />
       <Title />
