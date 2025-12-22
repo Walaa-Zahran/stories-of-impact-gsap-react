@@ -104,8 +104,13 @@ const App = () => {
         i = Math.max(0, Math.min(n - 1, i));
 
         const local = raw - i;
-        const exit = parseFloat(screens[i].dataset.exit || "0.99");
 
+        // Force: once user scrolls even a tiny bit, go to Carousel
+        if (i === 0 && self.progress > 0.0005) {
+          return setActive(1);
+        }
+
+        const exit = parseFloat(screens[i].dataset.exit || "0.99");
         if (i < n - 1 && local >= exit) return setActive(i + 1);
 
         const back = parseFloat(screens[i].dataset.back || "0.15");
@@ -125,7 +130,6 @@ const App = () => {
       const getVar = (el, name) =>
         parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
 
-      // Start stacked in center
       gsap.set(cards, {
         x: 0,
         y: 0,
@@ -134,18 +138,8 @@ const App = () => {
         transformOrigin: "50% 50%",
       });
 
-      // Scrub ONLY during screen-2 scroll segment
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: spacer,
-          start: () => `top top-=${window.innerHeight * 1}`, // screen index 1
-          end: () => `top top-=${window.innerHeight * 2}`, // screen index 2 end
-          scrub: true,
-          invalidateOnRefresh: true,
-        },
-      });
+      const tl = gsap.timeline({ paused: true });
 
-      // Step-by-step feel (stagger) + spread to final offsets
       tl.to(
         cards,
         {
@@ -153,13 +147,35 @@ const App = () => {
           y: (i, el) => getVar(el, "--fy"),
           scale: 1,
           ease: "none",
-          stagger: 0.12, // tweak for “step” feel
+          stagger: 0.12,
         },
         0
-      );
+      ).to(".story-card--back", { opacity: 0.55, ease: "none" }, 0);
 
-      // Optional: make back cards fade a bit as they go back
-      tl.to(".story-card--back", { opacity: 0.55, ease: "none" }, 0);
+      //  Drive the timeline with global scroll progress, but ONLY during screen-2 segment
+      ScrollTrigger.create({
+        trigger: spacer,
+        start: "top top",
+        end: () => `+=${window.innerHeight * n}`,
+        scrub: true,
+        onUpdate: (self) => {
+          // global progress 0..1
+          const p = self.progress;
+
+          // segment for screen index 1 (Carousel): [1/n .. 2/n]
+          const segStart = 1 / n;
+          const segEnd = 2 / n;
+
+          // map p -> 0..1 within this segment
+          const local = gsap.utils.clamp(
+            0,
+            1,
+            (p - segStart) / (segEnd - segStart)
+          );
+
+          tl.progress(local);
+        },
+      });
     };
 
     setupCarouselMotion();

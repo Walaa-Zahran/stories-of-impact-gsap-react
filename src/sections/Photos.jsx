@@ -323,7 +323,7 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     <section
       className="screen is-active"
       id="screen-0"
-      data-exit="0.02"
+      data-exit="0.001"
       ref={sectionRef}
     >
       <div className="impact">
