@@ -39,14 +39,19 @@ const App = () => {
 
     // Background scale on scroll (starts 1, grows smoothly)
     if (bgRef.current) {
+      const bgEndScreenId = "screen-5";
+      const bgEndIndex = screens.findIndex((s) => s.id === bgEndScreenId);
+      // fallback if not found
+      const endScreens = bgEndIndex >= 0 ? bgEndIndex : 1;
+
       gsap.to(bgRef.current, {
-        scale: 2.2,
+        scale: 1.5,
         ease: "none",
         transformOrigin: "50% 40%",
         scrollTrigger: {
           trigger: spacer,
           start: "top top",
-          end: () => `+=${window.innerHeight * n}`,
+          end: () => `+=${window.innerHeight * endScreens}`,
           scrub: true,
         },
       });
