@@ -1,3 +1,4 @@
+// src/sections/Photos.jsx
 import {
   forwardRef,
   useImperativeHandle,
@@ -18,11 +19,9 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
   const textTweenRef = useRef(null);
 
   const stopBounce = () => {
-    // kill tween
     bounceTweenRef.current?.kill();
     bounceTweenRef.current = null;
 
-    // remove listeners if any
     stopBounceCleanupRef.current?.();
     stopBounceCleanupRef.current = null;
   };
@@ -34,10 +33,8 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     const hintIcon = section.querySelector(".scroll-hint__icon img");
     if (!hintIcon) return;
 
-    // ensure no duplicates
     stopBounce();
 
-    // start bounce
     bounceTweenRef.current = gsap.to(hintIcon, {
       y: 10,
       duration: 0.8,
@@ -53,10 +50,7 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       stopped = true;
 
       stopBounce();
-
-      // hide hint on first interaction
       section.classList.remove("show-scroll-hint");
-
       gsap.to(hintIcon, { y: 0, duration: 0.2, ease: "power2.out" });
     };
 
@@ -79,19 +73,20 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     window.addEventListener("touchmove", onTouchMove, { passive: true });
     window.addEventListener("keydown", onKeyDown);
 
-    // store cleanup
     stopBounceCleanupRef.current = () => {
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKeyDown);
     };
   };
+
   const revertSplit = () => {
     splitRef.current.title?.revert();
     splitRef.current.subtitle?.revert();
     splitRef.current.title = null;
     splitRef.current.subtitle = null;
   };
+
   const animateCenterTextSplitLines = () => {
     const section = sectionRef.current;
     if (!section) return null;
@@ -153,15 +148,55 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     return tl;
   };
 
+  //  Expose BOTH reset + replay
   useImperativeHandle(ref, () => ({
-    playIntro: () => {
-      runIntro(); // replay any time
+    playIntro: () => runIntro(),
+
+    resetToStart: () => {
+      const section = sectionRef.current;
+      if (!section) return;
+
+      // kill animations
+      introTweenRef.current?.kill();
+      introTweenRef.current = null;
+
+      textTweenRef.current?.kill();
+      textTweenRef.current = null;
+
+      stopBounce();
+      revertSplit();
+
+      // reset classes
+      section.classList.remove(
+        "show-final-text",
+        "show-scroll-hint",
+        "images-hidden"
+      );
+
+      // reset center
+      const center = section.querySelector(".impact__center");
+      if (center) {
+        gsap.set(center, { clearProps: "all" });
+      }
+
+      // reset images
+      const images = Array.from(section.querySelectorAll(".impact__img"));
+      images.forEach((img) => {
+        img.style.setProperty("--dx", `0px`);
+        img.style.setProperty("--dy", `0px`);
+        gsap.set(img, { opacity: 1, scale: 1, clearProps: "transform" });
+      });
     },
   }));
 
   const runIntro = () => {
     const section = sectionRef.current;
     if (!section) return;
+
+    stopBounce();
+    section.classList.remove("show-final-text");
+    section.classList.remove("show-scroll-hint");
+    section.classList.remove("images-hidden");
 
     const images = Array.from(section.querySelectorAll(".impact__img"));
     if (!images.length) return;
@@ -186,28 +221,21 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       (el) => (v) => el.style.setProperty("--dy", `${v}px`)
     );
 
-    // center setters (DECLARE center BEFORE using it)
     const center = section.querySelector(".impact__center");
     if (center) {
       gsap.set(center, {
         rotation: -5,
-        y: -30, // move up
+        y: -30,
         transformOrigin: "50% 50%",
       });
     }
 
-    const setCenterAlpha = center
-      ? gsap.quickSetter(center, "autoAlpha")
-      : null;
     const setCenterY = center ? gsap.quickSetter(center, "y") : null;
 
     const apply = (p) => {
-      const HOLD = 0; // start immediately (no static hold)
-
-      // pp is normalized progress for the "main" animation segment
+      const HOLD = 0;
       const pp = HOLD === 0 ? p : (p - HOLD) / (1 - HOLD);
 
-      // --- image spread in/out ---
       const MID = 0.55;
       const t = pp <= MID ? pp / MID : (1 - pp) / (1 - MID);
 
@@ -219,7 +247,6 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
         setScale[i](i === heroIndex ? Math.max(1, pop) : pop);
       });
 
-      // fade images out near the end (independent from text)
       const IMG_FADE_START = 0.75;
       const IMG_FADE_END = 1;
 
@@ -235,15 +262,8 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       });
 
       section.classList.toggle("images-hidden", imgFade >= 1);
-
-      // keep center hidden the whole time
-      if (setCenterAlpha) setCenterAlpha(0);
-      if (setCenterY) setCenterY(0);
-      section.classList.remove("show-final-text");
-      section.classList.remove("show-scroll-hint");
     };
 
-    // kill any running intro tween before replay
     introTweenRef.current?.kill();
     introTweenRef.current = null;
 
@@ -252,12 +272,10 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
 
     revertSplit();
 
-    // reset state and start
     apply(0);
 
     const driver = { p: 0 };
 
-    // IMPORTANT: keep only ONE tween (you had it duplicated)
     introTweenRef.current = gsap.to(driver, {
       p: 1,
       duration: 4.6,
@@ -267,11 +285,9 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
         apply(1);
 
         section.classList.add("images-hidden");
-
-        if (setCenterAlpha) setCenterAlpha(1);
-        if (setCenterY) setCenterY(0);
         section.classList.add("show-final-text");
 
+        if (setCenterY) setCenterY(0);
         const tl = animateCenterTextSplitLines();
 
         if (tl) {
@@ -280,7 +296,6 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
             startBounceUntilScroll();
           });
         } else {
-          // fallback if split didn't run
           section.classList.add("show-scroll-hint");
           startBounceUntilScroll();
         }
@@ -291,7 +306,6 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
   };
 
   useLayoutEffect(() => {
-    // start once on mount
     runIntro();
     return () => {
       introTweenRef.current?.kill();
@@ -300,7 +314,7 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       textTweenRef.current?.kill();
       textTweenRef.current = null;
 
-      stopBounce(); // kills tween + removes listeners
+      stopBounce();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

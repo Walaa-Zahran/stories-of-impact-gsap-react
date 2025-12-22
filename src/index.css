@@ -163,10 +163,10 @@ img {
 }
 
 /* -----------------------------
-   Progress indicator (bottom)
+   Progress indicator (bottom) - GLOBAL + FIXED + SHOW/HIDE
 ------------------------------ */
 .progress {
-  position: absolute;
+  position: fixed;
   left: 50%;
   transform: translateX(-50%);
   bottom: 28px;
@@ -174,6 +174,17 @@ img {
   height: 8px;
   display: grid;
   place-items: center;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+  z-index: 9999;
+}
+
+.progress.is-visible {
+  opacity: 1;
+  visibility: visible;
 }
 
 .progress__track {
@@ -187,15 +198,14 @@ img {
 .progress__fill {
   position: absolute;
   left: 0;
-  width: var(--p, 50%);
+  width: var(--p, 0%);
   height: 3px;
   border-radius: 999px;
   background: var(--accent);
-  --p: 35%;
+  transition: width 0.25s ease;
 }
-
 /* -----------------------------
-   Carousel (Screen 2) - UPDATED to match screenshot
+   Carousel (Screen 2)
 ------------------------------ */
 .carousel {
   width: var(--container);
@@ -231,7 +241,7 @@ img {
   gap: 4.63px;
   padding: 0;
 
-  /* matches figma: opacity + blur on the whole group */
+  
   opacity: 0.4;
   filter: blur(4px);
 }
@@ -246,7 +256,6 @@ img {
   text-align: center;
   margin: 0;
 
-  /* matches figma drop shadow */
   text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 /* Line 1 (h2): white + stroke */
@@ -258,13 +267,13 @@ img {
   text-stroke: 1px #000000;
 }
 
-/* Line 2 (p): blue + bold (like your second screenshot) */
+/* Line 2 (p): blue + bold */
 .carousel__bgTextInner p.carousel__bgLine {
   font-family: "Poppins-Bold", sans-serif;
   font-weight: 700;
   color: #1a52ae;
 
-  /* no stroke on the blue line (matches your figma screenshot) */
+  /* no stroke on the blue line */
   -webkit-text-stroke: 0px transparent;
   text-stroke: 0px transparent;
 }
@@ -284,7 +293,7 @@ img {
     translateY(clamp(10px, 3vh, 40px));
 }
 
-/* Positions (tuned like screenshot) */
+/* Positions  */
 .story-card--primary {
   z-index: 3;
   transform: translate(-50%, -50%) translateX(-298px) translateY(40px);
@@ -315,18 +324,17 @@ img {
   height: 100%;
   object-fit: fill;
   object-position: center;
-  display: block;  position: relative;
+  display: block;
+  position: relative;
   z-index: 1;
-
 }
 .story-card__overlay {
   position: absolute;
   inset: auto 0 0 0;
   padding: 18px 18px 16px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
-  color: #fff;  z-index: 2;
-
-
+  color: #fff;
+  z-index: 2;
 }
 
 .story-card__title {
@@ -392,6 +400,8 @@ img {
 
 .impact__center {
   opacity: 0;
+  visibility: hidden;
+
   transform-origin: 50% 50%;
 }
 
@@ -441,7 +451,8 @@ img {
 .screen.show-final-text .impact__center {
   z-index: 999;
   position: relative;
-  opacity: 1;
+  opacity: 1;  visibility: visible;
+
 }
 
 .impact__img--tl {

@@ -1,6 +1,6 @@
 const Carousel = () => {
   return (
-    <section className="screen bg-dots" id="screen-2">
+    <section className="screen bg-dots" id="screen-2" data-back="0">
       <div className="carousel">
         <div className="carousel__track">
           {/* centered blurred text behind cards */}
@@ -59,11 +59,6 @@ const Carousel = () => {
             </div>
           </article>
         </div>
-      </div>
-
-      <div className="progress">
-        <span className="progress__track"></span>
-        <span className="progress__fill" style={{ "--p": "35%" }}></span>
       </div>
     </section>
   );
