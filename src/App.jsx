@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useLayoutEffect, useRef } from "react";
 
 import gsap from "gsap";
@@ -21,6 +20,9 @@ const App = () => {
 
   // used to prevent multiple replays while sitting at y=0
   const replayStateRef = useRef({ isReplaying: false });
+
+  // ✅ holds Carousel timeline so it’s accessible from onUpdate
+  const carouselTlRef = useRef(null);
 
   const initScrollExperience = () => {
     if (scrollInitRef.current) return;
@@ -72,54 +74,7 @@ const App = () => {
     };
     // -------------------------------------------------------------------
 
-    screens.forEach((s, i) => s.classList.toggle("is-active", i === 0));
-    let active = 0;
-
-    const setActive = (next) => {
-      if (next === active) return;
-
-      screens[active].classList.remove("is-active");
-      screens[next].classList.add("is-active");
-
-      //  Leaving Photos -> remove final state (so Carousel doesn't show it)
-      if (next !== 0) {
-        screens[0].classList.remove("show-final-text");
-        screens[0].classList.remove("show-scroll-hint");
-        // keep or remove based on preference:
-        // screens[0].classList.remove("images-hidden");
-      }
-
-      active = next;
-      updateProgress(active);
-    };
-
-    const st = ScrollTrigger.create({
-      trigger: spacer,
-      start: "top top",
-      end: () => `+=${window.innerHeight * n}`,
-      scrub: true,
-      onUpdate: (self) => {
-        const raw = self.progress * n;
-        let i = Math.floor(raw);
-        i = Math.max(0, Math.min(n - 1, i));
-
-        const local = raw - i;
-
-        // Force: once user scrolls even a tiny bit, go to Carousel
-        if (i === 0 && self.progress > 0.0005) {
-          return setActive(1);
-        }
-
-        const exit = parseFloat(screens[i].dataset.exit || "0.99");
-        if (i < n - 1 && local >= exit) return setActive(i + 1);
-
-        const back = parseFloat(screens[i].dataset.back || "0.15");
-        if (i > 0 && local <= back) return setActive(i - 1);
-
-        setActive(i);
-      },
-    });
-    // --- Carousel stack -> spread animation (Screen 2 only) ---
+    // ✅ setup carousel motion FIRST so tl exists
     const setupCarouselMotion = () => {
       const screen2 = document.querySelector("#screen-2");
       if (!screen2) return;
@@ -152,33 +107,88 @@ const App = () => {
         0
       ).to(".story-card--back", { opacity: 0.55, ease: "none" }, 0);
 
-      //  Drive the timeline with global scroll progress, but ONLY during screen-2 segment
-      ScrollTrigger.create({
-        trigger: spacer,
-        start: "top top",
-        end: () => `+=${window.innerHeight * n}`,
-        scrub: true,
-        onUpdate: (self) => {
-          // global progress 0..1
-          const p = self.progress;
+      // store timeline globally
+      carouselTlRef.current = tl;
 
-          // segment for screen index 1 (Carousel): [1/n .. 2/n]
-          const segStart = 1 / n;
-          const segEnd = 2 / n;
-
-          // map p -> 0..1 within this segment
-          const local = gsap.utils.clamp(
-            0,
-            1,
-            (p - segStart) / (segEnd - segStart)
-          );
-
-          tl.progress(local);
-        },
-      });
+      // start stacked
+      tl.progress(0);
     };
 
     setupCarouselMotion();
+
+    // ----- active screen switching -----
+    screens.forEach((s, i) => s.classList.toggle("is-active", i === 0));
+    let active = 0;
+
+    const setActive = (next) => {
+      if (next === active) return;
+
+      screens[active].classList.remove("is-active");
+      screens[next].classList.add("is-active");
+
+      // Leaving Photos -> remove final state (so Carousel doesn't show it)
+      if (next !== 0) {
+        screens[0].classList.remove("show-final-text");
+        screens[0].classList.remove("show-scroll-hint");
+        // keep or remove based on preference:
+        // screens[0].classList.remove("images-hidden");
+      }
+
+      active = next;
+      updateProgress(active);
+    };
+    // ----------------------------------
+
+    const st = ScrollTrigger.create({
+      trigger: spacer,
+      start: "top top",
+      end: () => `+=${window.innerHeight * n}`,
+      scrub: true,
+      onUpdate: (self) => {
+        // --- screen switching logic (same as before) ---
+        const raw = self.progress * n;
+        let i = Math.floor(raw);
+        i = Math.max(0, Math.min(n - 1, i));
+
+        const localScreen = raw - i;
+
+        // Force: once user scrolls even a tiny bit, go to Carousel
+        if (i === 0 && self.progress > 0.0005) {
+          setActive(1);
+        } else {
+          const exit = parseFloat(screens[i].dataset.exit || "0.99");
+          if (i < n - 1 && localScreen >= exit) {
+            setActive(i + 1);
+          }
+
+          const back = parseFloat(screens[i].dataset.back || "0.10");
+          if (i > 0 && localScreen <= back) {
+            setActive(i - 1);
+          }
+
+          setActive(i);
+        }
+
+        // --- ✅ Carousel stack -> spread immediately after leaving y=0 ---
+        const tl = carouselTlRef.current;
+        if (tl) {
+          // start anim as soon as we begin scrolling (same threshold you used to jump to Carousel)
+          const carouselStart = 0.0005;
+
+          // finish the carousel spread within the first "screen" worth of scroll
+          // (you can make it faster/slower by changing this)
+          const carouselEnd = 1 / n;
+
+          const local = gsap.utils.clamp(
+            0,
+            1,
+            (self.progress - carouselStart) / (carouselEnd - carouselStart)
+          );
+
+          tl.progress(local);
+        }
+      },
+    });
 
     const onResize = () => ScrollTrigger.refresh();
     window.addEventListener("resize", onResize);
@@ -189,6 +199,9 @@ const App = () => {
     return () => {
       window.removeEventListener("resize", onResize);
       st.kill();
+
+      carouselTlRef.current?.kill();
+      carouselTlRef.current = null;
     };
   };
 
@@ -203,13 +216,13 @@ const App = () => {
     // unlock scroll after intro
     document.body.style.overflow = "";
 
-    //  allow future replays
+    // allow future replays
     replayStateRef.current.isReplaying = false;
 
     initScrollExperience();
   };
 
-  //  Replay intro when user returns to top (loop behavior)
+  // Replay intro when user returns to top (loop behavior)
   useLayoutEffect(() => {
     let armed = window.scrollY > 10;
 
