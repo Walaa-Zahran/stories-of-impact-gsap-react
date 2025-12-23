@@ -269,7 +269,6 @@ img {
   color: #1a52ae;
 
   -webkit-text-stroke: 0px transparent;
-  text-stroke: 0px transparent;
 }
 
 /* All cards are absolutely positioned relative to the track */
@@ -400,7 +399,8 @@ img {
 .impact__center {
   opacity: 0;
   visibility: hidden;
-
+  text-align: center;
+  max-width: 900px;
   transform-origin: 50% 50%;
 }
 
@@ -442,10 +442,7 @@ img {
   margin: 0 auto;
 }
 
-.impact__center {
-  text-align: center;
-  max-width: 900px;
-}
+
 
 .screen.show-final-text .impact__center {
   z-index: 999;
@@ -549,8 +546,10 @@ img {
   align-items: center;
   justify-content: center;
   text-align: center;
-}
 
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
 .figure-card__body {
   padding: clamp(22px, 3vw, 34px);
 }
@@ -626,14 +625,7 @@ img {
 }
 
 
-.figure-card {
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: var(--shadow-soft);
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
+
 
 .figure-card--active {
   z-index: 3;
@@ -684,22 +676,7 @@ img {
   height: 206px;
 }
 
-/* mobile fallback: stack */
-@media (max-width: 900px) {
-  .figures__rail--floating {
-    height: auto;
-    display: grid;
-    gap: 16px;
-    perspective: none;
-  }
 
-  .figure-card--pos {
-    position: static;
-    transform: none;
-    opacity: 1;
-    filter: none;
-  }
-}
 
 /* -----------------------------
    CTA buttons 
@@ -754,73 +731,7 @@ img {
 /* -----------------------------
    Responsiveness
 ------------------------------ */
-@media (max-width: 900px) {
-  .figures__rail {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
 
-  .figure-card--side,
-  .figure-card--ghost {
-    display: none;
-  }
-
-  /* stack carousel cards on mobile */
-  .carousel {
-    height: auto;
-    padding: 40px 0 80px;
-  }
-
-  .carousel__track {
-    min-height: auto;
-    display: grid;
-    gap: 18px;
-  }
-
-  .story-card--primary,
-  .story-card--secondary.right {
-    transform: none;
-  }
-
-  .story-card--back {
-    display: none;
-  }
-
-  .impact {
-    min-height: auto;
-    padding: 40px 0 80px;
-  }
-
-  .impact__img {
-    position: static;
-    left: auto;
-    top: auto;
-    transform: none;
-    width: 100%;
-    max-width: 220px;
-    height: auto;
-    margin: 0 auto;
-  }
-
-  .impact {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .impact__center {
-    order: 0;
-  }
-
-  .impact::after {
-    content: "";
-    display: block;
-  }
-
-  .impact__img {
-    margin: 0 auto;
-  }
-}
 
 @media (max-width: 520px) {
   .subtitle br {
@@ -841,17 +752,19 @@ img {
     padding: 11px 18px;
   }
 }
-/* ---------------------------------------
-   MOBILE FALLBACK (<=900px)
----------------------------------------- */
+
 @media (max-width: 900px) {
-  /* disable the "fixed screen paging" layout */
+ body{
+   overflow-x: hidden;
+ }
+  /* Disable fixed screen paging layout */
   .screen {
-    position: relative;   
-    inset: auto;         
+    position: relative;
+    inset: auto;
     width: 100%;
     height: auto;
     min-height: 100vh;
+
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
@@ -863,23 +776,34 @@ img {
     height: 0 !important;
   }
 
-  /* Prevent weird fixed background scaling feel on small screens */
+  /* Background: avoid scaling / fixed feel */
   .bg-layer {
     inset: -10%;
     transform: none !important;
   }
 
-  /* Carousel: stack better + avoid giant fixed heights */
+  /* Hide desktop global progress */
+  #globalProgress {
+    display: none !important;
+  }
+
+  /* -----------------------------
+     Carousel: stack layout
+  ------------------------------ */
   .carousel {
     height: auto;
     padding: 64px 0 72px;
   }
 
   .carousel__track {
+    position: relative;
     height: auto;
     max-height: none;
+
     display: grid;
     gap: 16px;
+
+    overflow: visible;
     perspective: none;
     transform-style: flat;
   }
@@ -889,9 +813,11 @@ img {
     top: auto;
     left: auto;
     transform: none;
+
     width: 100%;
     max-width: 520px;
     margin: 0 auto;
+
     opacity: 1 !important;
     filter: none !important;
   }
@@ -906,6 +832,7 @@ img {
     top: auto;
     transform: none;
     margin-bottom: 16px;
+    pointer-events: none;
   }
 
   .carousel__bgTextInner {
@@ -918,23 +845,66 @@ img {
     opacity: 1 !important;
   }
 
-  /* Key Figures: switch to stacked list */
-  .figures{
+  /* -----------------------------
+     Impact (Photos): normal flow + stacked images
+  ------------------------------ */
+  .impact {
+    height: auto;         /* override 105vh desktop */
+    min-height: auto;
+    padding: 40px 0 80px;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .impact__center {
+    order: 0;
+  }
+
+  .impact__img {
+    position: static;
+    left: auto;
+    top: auto;
+    transform: none;
+
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  /* -----------------------------
+     Key Figures: stacked list
+  ------------------------------ */
+  .figures {
     width: 100%;
     padding: 0 16px;
   }
+
+  .figures__rail {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
   .figures__rail--floating {
     height: auto;
     display: grid;
     gap: 16px;
+
     perspective: none;
+    transform-style: flat;
   }
 
   .figure-card--pos {
     position: static;
     transform: none !important;
+
     opacity: 1 !important;
     filter: none !important;
+
     width: 100% !important;
     height: auto !important;
   }
@@ -947,7 +917,8 @@ img {
     height: auto !important;
   }
 
-  #globalProgress {
-    display: none !important;
+  .figure-card--side,
+  .figure-card--ghost {
+    display: none;
   }
 }
