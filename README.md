@@ -53,7 +53,6 @@ This project is a **desktop “scroll-driven screens” experience** powered by 
 - GSAP ScrollTrigger (`gsap/ScrollTrigger`)
 - GSAP SplitText (`gsap/SplitText`)
 
-> Note: SplitText is a GSAP plugin (requires appropriate license/setup depending on your environment).
 
 ---
 
