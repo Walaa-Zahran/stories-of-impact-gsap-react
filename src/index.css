@@ -841,3 +841,113 @@ img {
     padding: 11px 18px;
   }
 }
+/* ---------------------------------------
+   MOBILE FALLBACK (<=900px)
+---------------------------------------- */
+@media (max-width: 900px) {
+  /* disable the "fixed screen paging" layout */
+  .screen {
+    position: relative;   
+    inset: auto;         
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transition: none !important;
+  }
+
+  /* Spacer becomes unnecessary on mobile */
+  .scroll-spacer {
+    height: 0 !important;
+  }
+
+  /* Prevent weird fixed background scaling feel on small screens */
+  .bg-layer {
+    inset: -10%;
+    transform: none !important;
+  }
+
+  /* Carousel: stack better + avoid giant fixed heights */
+  .carousel {
+    height: auto;
+    padding: 64px 0 72px;
+  }
+
+  .carousel__track {
+    height: auto;
+    max-height: none;
+    display: grid;
+    gap: 16px;
+    perspective: none;
+    transform-style: flat;
+  }
+
+  .story-card {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  .story-card--back {
+    display: none;
+  }
+
+  .carousel__bgText {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    margin-bottom: 16px;
+  }
+
+  .carousel__bgTextInner {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+  }
+
+  .carousel_paragraph {
+    opacity: 1 !important;
+  }
+
+  /* Key Figures: switch to stacked list */
+  .figures{
+    width: 100%;
+    padding: 0 16px;
+  }
+  .figures__rail--floating {
+    height: auto;
+    display: grid;
+    gap: 16px;
+    perspective: none;
+  }
+
+  .figure-card--pos {
+    position: static;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .pos-1,
+  .pos-2,
+  .pos-3,
+  .pos-4 {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  #globalProgress {
+    display: none !important;
+  }
+}
