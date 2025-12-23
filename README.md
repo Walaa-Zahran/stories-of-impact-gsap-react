@@ -31,7 +31,6 @@ This project creates a **desktop scroll storytelling experience** using **GSAP +
 - **ScrollTrigger** (`gsap/ScrollTrigger`)
 - **SplitText** (`gsap/SplitText`)
 
-> **Note:** SplitText is a GSAP plugin and may require the appropriate license/setup in your environment.
 
 ---
 
