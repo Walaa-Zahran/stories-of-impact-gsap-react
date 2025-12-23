@@ -194,7 +194,7 @@ img {
   transition: width 0.25s ease;
 }
 /* -----------------------------
-   Carousel (Screen 2)
+   Carousel 
 ------------------------------ */
 .carousel {
   width: var(--container);
@@ -263,13 +263,11 @@ img {
   opacity: 0;
 }
 
-/* Line 2 (p): blue + bold */
 .carousel__bgTextInner p.carousel__bgLine {
   font-family: "Poppins-Bold", sans-serif;
   font-weight: 700;
   color: #1a52ae;
 
-  /* no stroke on the blue line */
   -webkit-text-stroke: 0px transparent;
   text-stroke: 0px transparent;
 }
@@ -292,7 +290,6 @@ img {
   will-change: transform, opacity, filter;
 }
 
-/* Set FINAL positions as variables */
 .story-card--primary {
   z-index: 3;
   --fx: -298px;
@@ -389,7 +386,7 @@ img {
 }
 
 /* -----------------------------
-   Impact floating layout (Screen 4)
+   Impact floating layout 
 ------------------------------ */
 .impact {
   width: 100vw;
@@ -518,7 +515,7 @@ img {
   --fy: -500.5px;
 }
 /* -----------------------------
-   Quote (Screen 3)
+   Quote
 ------------------------------ */
 #screen-3 {
   display: flex;
@@ -527,7 +524,7 @@ img {
   font-size: 24px;
 }
 /* -----------------------------
-   Key figures (Screen 4)
+   Key figures 
 ------------------------------ */
 .figures {
   width: var(--container);
@@ -559,7 +556,7 @@ img {
 }
 
 .figure-card__value {
-  font-size:44px;
+  font-size: 44px;
   font-weight: 500;
   letter-spacing: 1px;
 }
@@ -591,6 +588,7 @@ img {
   filter: blur(1px);
   opacity: 0.72;
   transform: scale(0.92);
+  box-shadow: 0px 2.56px 10.25px 0px rgba(41, 38, 47, 0.1);
 }
 
 .figure-card--ghost {
@@ -599,7 +597,6 @@ img {
   filter: blur(2px);
   opacity: 0.25;
 }
-/* make a stage like carousel__track */
 .figures__rail--floating {
   position: relative;
   width: 100%;
@@ -611,17 +608,24 @@ img {
   transform-style: preserve-3d;
 }
 
-/* every card becomes absolutely positioned, centered anchor */
 .figure-card--pos {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) translate(var(--fx, 0px), var(--fy, 0px))
-    scale(var(--s, 1));
+
+  --ox: 0px;
+  --oy: 0px;
+  --k: 1;
+
+  transform:
+    translate(-50%, -50%)
+    translate(calc(var(--fx, 0px) + var(--ox)), calc(var(--fy, 0px) + var(--oy)))
+    scale(calc(var(--s, 1) * var(--k)));
+
   will-change: transform, opacity, filter;
 }
 
-/* keep your existing glass look */
+
 .figure-card {
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.78);
@@ -631,7 +635,6 @@ img {
   -webkit-backdrop-filter: blur(10px);
 }
 
-/* you can still use these as "visual hierarchy" helpers */
 .figure-card--active {
   z-index: 3;
 }
@@ -642,8 +645,6 @@ img {
   filter: blur(0.4px);
 }
 
-/* --------- HERE IS WHERE YOU CONTROL POSITIONS ---------- */
-/* Adjust --fx/--fy (and optional --s) to place each card */
 
 .pos-1 {
   --fx: -64px;
@@ -654,33 +655,33 @@ img {
 }
 
 .pos-2 {
-     --fx: 527px;
-    --fy: 152px;
-    width: 273px;
-    --s: 1;
-    height: 257px;
+  --fx: 527px;
+  --fy: 152px;
+  width: 273px;
+  --s: 1;
+  height: 257px;
 }
 
 .pos-3 {
-       --fx: 450px;
-    --fy: 160px;
-    --s: 0.94;
-    opacity: 0.74;
-    filter: blur(0.8px);
-    z-index: 1;
-    width: 220px;
-    height: 206px;
+  --fx: 450px;
+  --fy: 160px;
+  --s: 0.94;
+  opacity: 0.74;
+  filter: blur(0.8px);
+  z-index: 1;
+  width: 220px;
+  height: 206px;
 }
 
 .pos-4 {
-    --fx: 90px;
-    --fy: 160px;
-    --s: 0.94;
-    opacity: 0.74;
-    filter: blur(0.8px);
-    z-index: 1;
-    width: 220px;
-    height: 206px;
+  --fx: 90px;
+  --fy: 160px;
+  --s: 0.94;
+  opacity: 0.74;
+  filter: blur(0.8px);
+  z-index: 1;
+  width: 220px;
+  height: 206px;
 }
 
 /* mobile fallback: stack */
@@ -701,7 +702,7 @@ img {
 }
 
 /* -----------------------------
-   CTA buttons (Screen 5)
+   CTA buttons 
 ------------------------------ */
 #screen-5 {
   display: flex;

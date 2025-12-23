@@ -16,6 +16,7 @@ const App = () => {
   const scrollInitRef = useRef(false);
   const photosRef = useRef(null);
   const bgRef = useRef(null);
+  const keyFiguresTlRef = useRef(null);
 
   // used to prevent multiple replays while sitting at y=0
   const replayStateRef = useRef({ isReplaying: false });
@@ -300,8 +301,89 @@ const App = () => {
       carouselTlRef.current = tl;
       tl.progress(0);
     };
+    const setupKeyFiguresMotion = () => {
+      const screen4 = document.querySelector("#screen-4");
+      if (!screen4) return;
+
+      const rail = screen4.querySelector(".figures__rail--floating");
+      const cards = screen4.querySelectorAll(".figure-card--pos");
+      if (!rail || !cards.length) return;
+
+      const read = (el, name) =>
+        parseFloat(getComputedStyle(el).getPropertyValue(name)) || 0;
+
+      gsap.set(rail, {
+        transformPerspective: 1100,
+        transformStyle: "preserve-3d",
+      });
+
+      // Start centered (cancel your final fx/fy), upright (no rotate)
+      gsap.set(cards, {
+        "--ox": (i, el) => `${-read(el, "--fx")}px`,
+        "--oy": (i, el) => `${-read(el, "--fy")}px`,
+        "--k": 0.12,
+        z: -180,
+        opacity: 0,
+        rotateX: 0,
+        rotateY: 0,
+        filter: "blur(4px)",
+        transformOrigin: "50% 50%",
+      });
+
+      const tl = gsap.timeline({ paused: true });
+
+      // Show quickly
+      tl.to(cards, {
+        opacity: 1,
+        filter: "blur(0px)",
+        duration: 0.12,
+        ease: "none",
+        stagger: { each: 0.03, from: "center" },
+      });
+
+      // Grow in center (still upright)
+      tl.to(cards, {
+        "--k": 0.9,
+        z: 0,
+        duration: 0.22,
+        ease: "power2.out",
+        stagger: { each: 0.05, from: "center" },
+      });
+
+      // Spread OUT from center to your exact CSS positions (no hold)
+      tl.to(
+        cards,
+        {
+          "--ox": "0px",
+          "--oy": "0px",
+          "--k": 1,
+          z: 35,
+          duration: 0.42,
+          ease: "power1.out",
+          stagger: { each: 0.06, from: "center" },
+        },
+        "<"
+      );
+
+      // OPTIONAL: if you still want the exit like carousel, keep this.
+      // If you DON'T want them to exit, delete this block.
+      tl.to(cards, {
+        "--ox": (i, el) => `${read(el, "--fx") * 1.2}px`,
+        "--oy": (i, el) => `${read(el, "--fy") * 1.2}px`,
+        "--k": 3.2,
+        z: 720,
+        opacity: 0,
+        duration: 0.55,
+        ease: "power2.in",
+        stagger: { each: 0.05, from: "center" },
+      });
+
+      keyFiguresTlRef.current = tl;
+      tl.progress(0);
+    };
 
     setupCarouselMotion();
+    setupKeyFiguresMotion();
 
     // ----- active screen switching -----
     screens.forEach((s, i) => s.classList.toggle("is-active", i === 0));
@@ -337,7 +419,6 @@ const App = () => {
 
         const localScreen = raw - i;
 
-        // Force: once user scrolls even a tiny bit, go to Carousel
         if (i === 0 && self.progress > 0.0005) {
           setActive(1);
         } else {
@@ -366,6 +447,20 @@ const App = () => {
 
           updateProgress(1, local);
         }
+        const ktl = keyFiguresTlRef.current;
+        if (ktl) {
+          const keyFiguresIndex = 3;
+
+          const start = keyFiguresIndex / n;
+          const end = (keyFiguresIndex + 1) / n;
+
+          const local = gsap.utils.clamp(
+            0,
+            1,
+            (self.progress - start) / (end - start)
+          );
+          ktl.progress(local);
+        }
 
         if (active !== 1) updateProgress(active);
       },
@@ -383,7 +478,8 @@ const App = () => {
 
       carouselTlRef.current?.kill();
       carouselTlRef.current = null;
-
+      keyFiguresTlRef.current?.kill();
+      keyFiguresTlRef.current = null;
       paraSplitRef.current?.revert?.();
       paraSplitRef.current = null;
     };
@@ -435,7 +531,6 @@ const App = () => {
     <main className="page">
       <div className="bg-layer" ref={bgRef} aria-hidden="true" />
 
-      {/* Global bottom progress (appears starting from Carousel) */}
       <div className="progress" id="globalProgress" aria-hidden="true">
         <span className="progress__track"></span>
         <span className="progress__fill" id="globalProgressFill"></span>

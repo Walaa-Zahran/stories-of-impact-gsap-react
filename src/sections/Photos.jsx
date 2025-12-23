@@ -1,4 +1,3 @@
-// src/sections/Photos.jsx
 import {
   forwardRef,
   useImperativeHandle,
@@ -148,7 +147,6 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
     return tl;
   };
 
-  //  Expose BOTH reset + replay
   useImperativeHandle(ref, () => ({
     playIntro: () => runIntro(),
 
@@ -156,7 +154,6 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       const section = sectionRef.current;
       if (!section) return;
 
-      // kill animations
       introTweenRef.current?.kill();
       introTweenRef.current = null;
 
@@ -166,20 +163,17 @@ const Photos = forwardRef(({ onIntroDone }, ref) => {
       stopBounce();
       revertSplit();
 
-      // reset classes
       section.classList.remove(
         "show-final-text",
         "show-scroll-hint",
         "images-hidden"
       );
 
-      // reset center
       const center = section.querySelector(".impact__center");
       if (center) {
         gsap.set(center, { clearProps: "all" });
       }
 
-      // reset images
       const images = Array.from(section.querySelectorAll(".impact__img"));
       images.forEach((img) => {
         img.style.setProperty("--dx", `0px`);
