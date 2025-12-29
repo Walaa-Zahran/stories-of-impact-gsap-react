@@ -335,5 +335,8 @@ Common assets referenced:
 ---
 
 ## Link
-*  https://thriving-nasturtium-2d212d.netlify.app/ 
+*  https://thriving-nasturtium-2d212d.netlify.app/
+## Video
+[gsap.webm](https://github.com/user-attachments/assets/922dcb83-8358-4c7c-9e5f-fe97f5f35873)
+
 
